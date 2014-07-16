@@ -39,7 +39,7 @@ class LockTree:
 		if self.actualNode.value == lock_id:
 			self.actualNode = self.actualNode.parent
 		else:
-			path = self.getPathUpTo(self.actualNode,lock_id)
+			path = self.__getPathFromUpTo(self.actualNode,Node(lock_id))
 			if path == None:
 				print("ERROR? release not acquired lock")
 			else:
@@ -51,36 +51,31 @@ class LockTree:
 				releasedNode.parent.addChild(path_clone[-1])
 				self.actualNode = path_clone[0]
 				
-	def __getPathUpTo(self,node,value):
+	def __getPathFromUpTo(self,node,query):
 		path = []
-		while node.value != value:
-			path.append(node)
-			if node.isRoot():
-				return None # reached top Node with requested value not found
-			node = node.parent
-			
-		path.append(node)	
-		return path
+		for n in node.getAllParents_G():
+			path.append(n)
+			if n == query:
+				return path
+		# reached top Node with requested value not found
+		return None
 		
 	def getAllHoldLocks(self,lock_id):
 		"""returns set of all Locks that are ever acquired when the given node is acquired"""
 		query = Node(lock_id)
 		hold_locks = set()
-		for lockid_node in self.root.findAllBFS(query):
+		for lockid_node in self.root.findAll(query):
 			for node in lockid_node.getAllParents():
 				hold_locks.add(node.value)
+		return hold_locks
 	def getAllLocksBelow(self,lock_id):
-		""" returns set of all locks for which the given lock is acquired at any time"""
+		""" returns set of all locks for which the given lock is acquired at some time"""
 		query = Node(lock_id)
-		child_locks = set()
-		for lockid_node in self.root.findAllBFS(query):
-			lockid_node.getAllChildren()
-# methods
-#  addLock(Lock)
-#  unlock
-#  getAllChilds(Lock): set
-
-
+		descendant_locks = set()
+		for lockid_node in self.root.findAll(query):
+			for descendant in lockid_node.getAllChildrenBFS_G():
+				descendant_locks.add(descendant.value)
+		return descendant_locks
 
 class Node:
 	def __init__(self):
@@ -107,15 +102,7 @@ class Node:
 		childnode.parent = self
 		self.children.append(childnode)
 		
-	def findDFS(self,query):
-	"""find first occurence of query; Deepth First Search """
-		if self == query
-			return self
-		for child in self.children:
-			r = child.findDFS(query)
-			if r != None:
-				return r
-		return None
+
 
 	def findAllDFS(self,query,res = []):
 	"""find all occurence of query; Deepth First Search """
@@ -125,51 +112,31 @@ class Node:
 			child.findAllDFS(query,res)
 		return res
 	
-	def findBFS(self,query):
+	def find(self,query,generator = self.getAllChildrenBFS_G):
 	"""find first occurence of query; Breadth First Search """
-		queue = deque(self)
-		while len(queue) > 0:
-			n = queue.popLeft()
-			if n == query
-				return n
-			queue.extend(n.children)
-		return None
+		for node in generator():
+			if node == query
+				return node
 		
-	def findAllBFS(self,query):
+	def findAll(self,query,generator = self.getAllChildrenBFS_G):
 	"""find all occurence of query; Breadth First Search """
 		occurences = []
-		queue = deque(self)
-		while len(queue) > 0:
-			n = queue.popLeft()
-			if n == query
-				occurences.append(n)
-			queue.extend(n.children)
-		return None
+		for node in generator():
+			if node == query
+				occurences.append(node)
+		return occurences
 
-#	def getPathUpTo(self,value): # use allParents generator in a loop
-#	"""returns list of Nodes representing the path to the Node with the requested value 
-#			or None if no Node above has this value"""
-#		if self.value == value:
-#			return [self]
-#		elif self.isRoot(): 
-#			return None
-#		else:
-#			upperpath = self.parent.getPathUpTo(value)
-#			if upperpath == None: #value not found above
-#				return None
-#			return [self].extend(upperpath)
-			
 	def getAllParents(self):
 		"""returns list of all parents of this node up to the Root element"""
 		return [node in self.getAllParentsG() ]
 
-	def getAllParentsG(self):
+	def getAllParents_G(self):
 		"""a Generator which returns all parents of this node up to the Root element
 				this node as first"""
 		yield self
 		if not self.isRoot():
-			yield from self.parent.getAllParentsG()
-		
+			yield from self.parent.getAllParents_G()
+
 	def getAllChildrenBFS_G(self):
 		""" a Generator that returns all children of this node in BFS order
 				this node as first"""	
@@ -177,14 +144,14 @@ class Node:
 		while len(queue) > 0:
 			n = queue.popLeft()
 			yield n
-			
+
 	def getAllChildrenDFS_G(self):
 		""" a Generator that returns all children of this node in DFS order
 				this node as first"""	
 		yield self
 		for child in self.children:
 			yield from child.getAllChildrenDFS_G()
-			
+
 	def isAbove(self,value):
 		"""returns True if this Node or any parent Node has requested value"""
 		if self.value == value:
@@ -194,8 +161,7 @@ class Node:
 				return False
 			else:
 				return self.parent.isAbove(value)
-		
-		
+
 # Class Lock
 #  abstraktion eines Locks
 #  jedes obj hat eine eindeutige ID die es einem Lock im Inferior zuweist
