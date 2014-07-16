@@ -77,24 +77,19 @@ class LockTree:
 				descendant_locks.add(descendant.value)
 		return descendant_locks
 
+
 class Node:
-	def __init__(self):
-		self.parent = None
-		self.children = []
-		self.value = None
-	def __init__(self,parent,value):
+	def __init__(self,value,parent=None):
 		self.parent = parent
 		self.children = []
 		self.value = value
-	def __init__(self,value):
-		self.parent = None
-		self.children = []
-		self.value = value
 	def __eq__(self, other):
+		if other == None:
+			return False 
 		return self.value == other.value
 	def isRoot(self):
 		return self.parent == None
-	def isLeaf(self)
+	def isLeaf(self):
 		return len(self.children) == 0
 	def getNumChildren(self):
 		return len(self.children)
@@ -102,33 +97,33 @@ class Node:
 		childnode.parent = self
 		self.children.append(childnode)
 		
-
-
-	def findAllDFS(self,query,res = []):
-	"""find all occurence of query; Deepth First Search """
-		if self == query
-			res.append(self)
-		for child in self.children:
-			child.findAllDFS(query,res)
-		return res
-	
-	def find(self,query,generator = self.getAllChildrenBFS_G):
-	"""find first occurence of query; Breadth First Search """
-		for node in generator():
-			if node == query
+	def getAllChildrenBFS_G(self):
+		""" a Generator that returns all children of this node in BFS order
+				this node as first"""	
+		queue = deque([self])
+		while len(queue) > 0:
+			n = queue.popleft()
+			yield n
+			queue.extend(n.children)
+			
+			
+	def find(self,query,generator = getAllChildrenBFS_G):
+		"""find first occurence of query; Breadth First Search """
+		for node in generator(self):
+			if node == query:
 				return node
 		
-	def findAll(self,query,generator = self.getAllChildrenBFS_G):
-	"""find all occurence of query; Breadth First Search """
+	def findAll(self,query,generator = getAllChildrenBFS_G):
+		"""find all occurence of query; Breadth First Search """
 		occurences = []
-		for node in generator():
-			if node == query
+		for node in generator(self):
+			if node == query:
 				occurences.append(node)
 		return occurences
 
 	def getAllParents(self):
 		"""returns list of all parents of this node up to the Root element"""
-		return [node in self.getAllParentsG() ]
+		return [node for node in self.getAllParents_G() ]
 
 	def getAllParents_G(self):
 		"""a Generator which returns all parents of this node up to the Root element
@@ -137,13 +132,7 @@ class Node:
 		if not self.isRoot():
 			yield from self.parent.getAllParents_G()
 
-	def getAllChildrenBFS_G(self):
-		""" a Generator that returns all children of this node in BFS order
-				this node as first"""	
-		queue = deque(self)
-		while len(queue) > 0:
-			n = queue.popLeft()
-			yield n
+
 
 	def getAllChildrenDFS_G(self):
 		""" a Generator that returns all children of this node in DFS order
