@@ -1,4 +1,4 @@
-
+from collections import deque
 
 class LockForrest:
 # has a LockTree for each thread
@@ -36,54 +36,63 @@ class LockTree:
 	def release(self,lock_id):
 		if lock_id == None:
 			return
-		if self.actualNode.payload == lock_id:
+		if self.actualNode.value == lock_id:
 			self.actualNode = self.actualNode.parent
 		else:
 			path = self.getPathUpTo(self.actualNode,lock_id)
 			if path == None:
-				print("ERROR? release not released lock")
+				print("ERROR? release not acquired lock")
 			else:
+#				add all acquired Locks as childs to the Lock above the released one
 				path_clone = path[:-1]
 				releasedNode = path[-1]
 				for node in path_clone:
-					node.clearChildren()
-					
-				releasedNode.parent.addChild(path_clone)
+					node.clearChildren()					
+				releasedNode.parent.addChild(path_clone[-1])
+				self.actualNode = path_clone[0]
 				
-			
-	def getPathUpTo(self,node,payload):
+	def __getPathUpTo(self,node,value):
 		path = []
-		while node.payload != payload:
+		while node.value != value:
 			path.append(node)
 			if node.isRoot():
-				return None # reached top Node with requested payload not found
+				return None # reached top Node with requested value not found
 			node = node.parent
 			
 		path.append(node)	
 		return path
 		
-	def getHoldLocks(self,node):
+	def getAllHoldLocks(self,lock_id):
 		"""returns list of Locks that are acquired in the given node"""
-		for node in node.getPathUpToRoot():
-			path.append(node.payload)
-		
+		query = Node(lock_id)
+		hold_locks = set()
+		for lockid_node in self.root.findAllDFS(query):
+			for node in lockid_node.getPathUpToRoot():
+				hold_locks.add(node.value)
+
 # methods
 #  addLock(Lock)
 #  unlock
 #  getAllParents(Lock): set
 #  getAllChilds(Lock): set
 
+
+
 class Node:
 	def __init__(self):
 		self.parent = None
 		self.children = []
-		self.payload = None
-	def __init__(self,parent,payload):
+		self.value = None
+	def __init__(self,parent,value):
 		self.parent = parent
 		self.children = []
-		self.payload = payload
+		self.value = value
+	def __init__(self,value):
+		self.parent = None
+		self.children = []
+		self.value = value
 	def __eq__(self, other):
-		return self.payload == other.payload
+		return self.value == other.value
 	def isRoot(self):
 		return self.parent == None
 	def isLeaf(self)
@@ -93,36 +102,75 @@ class Node:
 	def addChild(self,childnode):
 		childnode.parent = self
 		self.children.append(childnode)
+		
+	def findDFS(self,query):
+	"""find first occurence of query; Deepth First Search """
+		if self == query
+			return self
+		for child in self.children:
+			r = child.findDFS(query)
+			if r != None:
+				return r
+		return None
 
-	def getPathUpTo(self,payload):
-	"""returns list of Nodes representing the path to the Node with the requested payload 
-			or None if no Node above has this payload"""
-		if self.payload == payload:
+	def findAllDFS(self,query,res = []):
+	"""find all occurence of query; Deepth First Search """
+		if self == query
+			res.append(self)
+		for child in self.children:
+			child.findAllDFS(query,res)
+		return res
+	
+	def findBFS(self,query):
+	"""find first occurence of query; Breadth First Search """
+		queue = deque(self)
+		while len(queue) > 0:
+			n = queue.popLeft()
+			if n == query
+				return n
+			queue.extend(n.children)
+		return None
+		
+	def findAllBFS(self,query):
+	"""find all occurence of query; Breadth First Search """
+		occurences = []
+		queue = deque(self)
+		while len(queue) > 0:
+			n = queue.popLeft()
+			if n == query
+				occurences.append(n)
+			queue.extend(n.children)
+		return None
+
+	def getPathUpTo(self,value):
+	"""returns list of Nodes representing the path to the Node with the requested value 
+			or None if no Node above has this value"""
+		if self.value == value:
 			return [self]
 		elif self.isRoot(): 
 			return None
 		else:
-			upperpath = self.parent.getPathUpTo(payload)
-			if upperpath == None: #payload not found above
+			upperpath = self.parent.getPathUpTo(value)
+			if upperpath == None: #value not found above
 				return None
 			return [self].extend(upperpath)
 			
 	def getPathUpToRoot(self):
-		"""returns list of nodes up to the Root element"""
+		"""returns list of all nodes up to the Root element"""
 		if self.parent == None:
 			return [self]
 		else:
 			return [self].extend(self.parent.getPathUpToRoot())			
 			
-	def isAbove(self,payload):
-		"""returns True if this Node or any parent Node has equal payload"""
-		if self.payload == payload:
+	def isAbove(self,value):
+		"""returns True if this Node or any parent Node has requested value"""
+		if self.value == value:
 			return True
 		else:
-			if self.parent == None:
+			if self.isRoot():
 				return False
 			else:
-				return self.parent.isAbove(payload)
+				return self.parent.isAbove(value)
 		
 		
 # Class Lock
