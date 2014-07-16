@@ -63,17 +63,21 @@ class LockTree:
 		return path
 		
 	def getAllHoldLocks(self,lock_id):
-		"""returns list of Locks that are acquired in the given node"""
+		"""returns set of all Locks that are ever acquired when the given node is acquired"""
 		query = Node(lock_id)
 		hold_locks = set()
-		for lockid_node in self.root.findAllDFS(query):
-			for node in lockid_node.getPathUpToRoot():
+		for lockid_node in self.root.findAllBFS(query):
+			for node in lockid_node.getAllParents():
 				hold_locks.add(node.value)
-
+	def getAllLocksBelow(self,lock_id):
+		""" returns set of all locks for which the given lock is acquired at any time"""
+		query = Node(lock_id)
+		child_locks = set()
+		for lockid_node in self.root.findAllBFS(query):
+			lockid_node.getAllChildren()
 # methods
 #  addLock(Lock)
 #  unlock
-#  getAllParents(Lock): set
 #  getAllChilds(Lock): set
 
 
@@ -142,25 +146,44 @@ class Node:
 			queue.extend(n.children)
 		return None
 
-	def getPathUpTo(self,value):
-	"""returns list of Nodes representing the path to the Node with the requested value 
-			or None if no Node above has this value"""
-		if self.value == value:
-			return [self]
-		elif self.isRoot(): 
-			return None
-		else:
-			upperpath = self.parent.getPathUpTo(value)
-			if upperpath == None: #value not found above
-				return None
-			return [self].extend(upperpath)
+#	def getPathUpTo(self,value): # use allParents generator in a loop
+#	"""returns list of Nodes representing the path to the Node with the requested value 
+#			or None if no Node above has this value"""
+#		if self.value == value:
+#			return [self]
+#		elif self.isRoot(): 
+#			return None
+#		else:
+#			upperpath = self.parent.getPathUpTo(value)
+#			if upperpath == None: #value not found above
+#				return None
+#			return [self].extend(upperpath)
 			
-	def getPathUpToRoot(self):
-		"""returns list of all nodes up to the Root element"""
-		if self.parent == None:
-			return [self]
-		else:
-			return [self].extend(self.parent.getPathUpToRoot())			
+	def getAllParents(self):
+		"""returns list of all parents of this node up to the Root element"""
+		return [node in self.getAllParentsG() ]
+
+	def getAllParentsG(self):
+		"""a Generator which returns all parents of this node up to the Root element
+				this node as first"""
+		yield self
+		if not self.isRoot():
+			yield from self.parent.getAllParentsG()
+		
+	def getAllChildrenBFS_G(self):
+		""" a Generator that returns all children of this node in BFS order
+				this node as first"""	
+		queue = deque(self)
+		while len(queue) > 0:
+			n = queue.popLeft()
+			yield n
+			
+	def getAllChildrenDFS_G(self):
+		""" a Generator that returns all children of this node in DFS order
+				this node as first"""	
+		yield self
+		for child in self.children:
+			yield from child.getAllChildrenDFS_G()
 			
 	def isAbove(self,value):
 		"""returns True if this Node or any parent Node has requested value"""
