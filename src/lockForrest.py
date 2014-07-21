@@ -5,44 +5,80 @@ class LockForrest:
 	def __init__ (self):
 		self.trees = {}
 	
-	def acquire(self,lock_id,thread_id):
+	def acquire(self,thread_id,lock_id):
 		if thread_id not in self.trees:
 			self.trees[thread_id] = LockTree(thread_id)
 		self.trees[thread_id].acquire(lock_id)
 	
-	def release(self,lock_id,thread_id):
+	def release(self,thread_id,lock_id):
 		if thread_id not in self.trees:
 			print("ERROR? thread never acqired lock but releases it")
 			self.trees[thread_id] = LockTree(thread_id)
 		self.trees[thread_id].release(lock_id)
-
+	def check(self):
+		warnings = ""
+		for t1 in self.trees.values():
+			for t2 in self.trees.values():
+				if t1 != t2:
+					warnings += self.__checkTreePair(t1,t2)
+		print(warnings)
 		
+	def __checkTreePair(self,t1,t2):
+		warnings = ""
+		allLocks = t1.getAllLocksBelow(t1.root.value) | t2.getAllLocksBelow(t2.root.value)
+		for lock_id in allLocks:
+			t1below = t1.getAllLocksBelow(lock_id)
+			t1above = t1.getAllHoldLocks(lock_id)
+			t2above = t2.getAllHoldLocks(lock_id)
+			possible_deadlocks = t1below & t2above
+			if len(possible_deadlocks)	!= 0:
+				#check for gatelock
+				gatelocks = t1above & t2above
+				if len(gatelocks) > 0:
+					#print("prevented by gatelock"+str(gatelocks))
+					warnings += "possible deadlock between "+str(t1.threadID)+" and "+str(t2.threadID)+": "+str(possible_deadlocks)
+					warnings += " prevented by gatelock"+str(gatelocks)+"\n"
+				else:
+					#print("possible deadlock between "+str(t1.threadID)+" and "+str(t2.threadID)+": "+str(possible_deadlocks))
+					warnings += "possible deadlock between "+str(t1.threadID)+" and "+str(t2.threadID)+": "+str(possible_deadlocks)+"\n"
+		return warnings
+	def getThreadList(self):
+		return self.trees.keys()
+	def printTree(self,thread_id):
+		if thread_id not in self.trees:
+			print("no LockTree for Thread "+str(thread_id))
+		else:
+			self.trees[thread_id].printTree()
+
 class LockTree: 
 	"""  represents lockTree of one Thread"""
-
 	def __init__ (self,threadID):
 		self.threadID = threadID
 		self.root = Node(None)
-		self.actualNode = self.root
+		self.currentNode = self.root
 	def size(self):
 		return len([x for x in self.root.getAllChildrenBFS_G()])
 	def acquire(self,lock_id):
 		if lock_id == None:
 			return
-		if self.actualNode.isAbove(Node(lock_id)):
+		if self.currentNode.isAbove(Node(lock_id)):
 			print("reentrant lock: Lock "+str(lock_id)+" is still acquired")
-			return
-		childnode = Node(lock_id)
-		self.actualNode.addChild(childnode)
-		self.actualNode = childnode
-		
+			# reentrant locks get added again
+		if Node(lock_id) in self.currentNode.children:
+			# follow given path if already taken in the past
+			self.currentNode = self.currentNode.getChild(Node(lock_id))
+		else:
+			childnode = Node(lock_id)
+			self.currentNode.addChild(childnode)
+			self.currentNode = childnode
+
 	def release(self,lock_id):
 		if lock_id == None:
 			return
-		if self.actualNode.value == lock_id:
-			self.actualNode = self.actualNode.parent
+		if self.currentNode.value == lock_id:
+			self.currentNode = self.currentNode.parent
 		else:
-			path = self.__getPathFromUpTo(self.actualNode,lock_id)
+			path = self.__getPathFromUpTo(self.currentNode,lock_id)
 			if path == None:
 				print("ERROR? release not acquired lock"+str(lock_id))
 			else:
@@ -52,10 +88,11 @@ class LockTree:
 				path.reverse()
 				newsubtreeRoot = releasedNode.parent
 				for node in path:
-					newnode = Node(node.value)
-					newsubtreeRoot.addChild(newnode)
-					newsubtreeRoot = newnode
-				self.actualNode = newsubtreeRoot
+					#newnode = Node(node.value)
+					#newsubtreeRoot.addChild(newnode)
+					#newsubtreeRoot = newnode
+					self.acquire(node.value)
+				#self.currentNode = newsubtreeRoot
 
 	def __getPathFromUpTo(self,node,lock_id):
 		path = []
@@ -65,7 +102,7 @@ class LockTree:
 				return path
 		# reached root Node but requested value not found
 		return None
-		
+
 	def getAllHoldLocks(self,lock_id):
 		"""returns set of all Locks that are ever acquired when the given node is acquired"""
 		query = Node(lock_id)
@@ -73,7 +110,8 @@ class LockTree:
 		for lockid_node in self.root.findAll(query):
 			for node in lockid_node.getAllParents():
 				hold_locks.add(node.value)
-		return hold_locks - set([lock_id,None])
+		hold_locks = hold_locks - set([lock_id,None])
+		return hold_locks
 	
 	def getAllLocksBelow(self,lock_id):
 		""" returns set of all locks for which the given lock is acquired at some time"""
@@ -105,6 +143,12 @@ class Node:
 		return len(self.children) == 0
 	def getNumChildren(self):
 		return len(self.children)
+	def getChild(self,query):
+		for child in self.children:
+			if child == query:
+				return child
+		#not found
+		return None
 	def addChild(self,childnode):
 		childnode.parent = self
 		self.children.append(childnode)

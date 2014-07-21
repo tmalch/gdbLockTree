@@ -1,33 +1,33 @@
+import gdb
 
-
-
-class BaseLockDesc():
+class BaseLockDesc:
 	ACQ = "lock"
 	REL = "unlock"
 	def __init__ (self,location="",typ=None):
-		self.location = location
-		self.type = typ
-	def location():
+		self._location = location
+		self.typ = typ
+	def location(self):
 		""" returns the location at which the breakpoint should be set"""
-		return self.location
-	def getType():
+		return self._location
+	def getType(self):
 		""" returns ACQ or REL"""
-		return self.type
-	def getThreadID():
+		return self.typ
+	def getThreadID(self):
 		""" to be implemented in child"""
 		return None
-	def getLockID():
+	def getLockID(self):
 		""" to be implemented in child"""
 		return None
-	def getSourceLine():
+	def getSourceLine(self):
 		""" to be implemented in child"""
 		return "Unkown"
 	
 ## HELPER METHODS ## to be used for implementing  	
-	def getGDBThreadID(self):
-		return gdb.selected_thread().num
+	def getGDBThreadID():
+		return gdb.selected_thread().ptid[1]
+		#return gdb.selected_thread().num
 
-	def getVariableValue(self,name):
+	def getVariableValue(name):
 		frame = gdb.newest_frame()
 		if not frame.is_valid():
 			print("frame not valid")
@@ -35,11 +35,11 @@ class BaseLockDesc():
 		try:
 			frame = gdb.newest_frame()
 			value = frame.read_var(name)
-			value = value.cast(gdb.lookup_type("unsigned int"))
+		#	value = value.cast(gdb.lookup_type("unsigned int"))
 			return value
 		except Exception as e:
 			print(e)
-	def getCallingFunctionName(self):
+	def getCallingFunctionName():
 		try:
 			frame = gdb.newest_frame().older()
 			if frame.function() != None:
@@ -49,7 +49,7 @@ class BaseLockDesc():
 		except Exception as e:
 			print(e)
 			return "Unkown"	
-	def getFunctionName(self):
+	def getFunctionName():
 		try:
 			frame = gdb.newest_frame()
 			if frame.function() != None:
@@ -59,7 +59,7 @@ class BaseLockDesc():
 		except Exception as e:
 			print(e)
 			return "Unkown"	
-	def getCallingLocation(self):
+	def getCallingLocation():
 		try:
 			frame = gdb.newest_frame().older()
 			res = str(frame.find_sal().symtab.filename)
@@ -70,66 +70,42 @@ class BaseLockDesc():
 
 class PthreadLockDesc(BaseLockDesc):
 	def __init__ (self):
-		super(self).__init__ ("pthread_mutex_lock",ACQ)
+		BaseLockDesc.__init__ (self,"pthread_mutex_lock",BaseLockDesc.ACQ)
 
-	def getThreadID():
+	def getThreadID(self):
 		return BaseLockDesc.getGDBThreadID();
-	def getLockID():
+	def getLockID(self):
 		return BaseLockDesc.getVariableValue("mutex")
-	def getSourceLine():
+	def getSourceLine(self):
 		return BaseLockDesc.getFunctionName()+" called from "+BaseLockDesc.getCallingFunctionName()+ " at "+BaseLockDesc.getCallingLocation()
 		
 class QMutexLockDesc(BaseLockDesc):
 	def __init__ (self):
-		super(self).__init__ ("QMutex::lock",ACQ)
-	def getThreadID():
+		BaseLockDesc.__init__ (self,"QMutex::lock",BaseLockDesc.ACQ)
+	def getThreadID(self):
 		return BaseLockDesc.getGDBThreadID();
-	def getLockID():
+	def getLockID(self):
 		return BaseLockDesc.getVariableValue("this")
-	def getSourceLine():
+	def getSourceLine(self):
 		return BaseLockDesc.getFunctionName()+" called from "+BaseLockDesc.getCallingFunctionName()+ " at "+BaseLockDesc.getCallingLocation()
 		
-class QMutexLockDesc(BaseLockDesc):
+class QMutexUnlockDesc(BaseLockDesc):
 	def __init__ (self):
-		super(self).__init__ ("QMutex::unlock",ACQ)
-	def getThreadID():
+		BaseLockDesc.__init__ (self,"QMutex::unlock",BaseLockDesc.REL)
+	def getThreadID(self):
 		return BaseLockDesc.getGDBThreadID();
-	def getLockID():
+	def getLockID(self):
 		return BaseLockDesc.getVariableValue("this")
-	def getSourceLine():
+	def getSourceLine(self):
 		return BaseLockDesc.getFunctionName()+" called from "+BaseLockDesc.getCallingFunctionName()+ " at "+BaseLockDesc.getCallingLocation()
 
 class PthreadUnlockDesc(BaseLockDesc):
-	def __init__ (self):
-		super(self).__init__ ("pthread_mutex_unlock",REL)
-
-	def getThreadID():
+	def __init__(self):
+		BaseLockDesc.__init__(self,"pthread_mutex_unlock",BaseLockDesc.REL)
+	def getThreadID(self):
 		return BaseLockDesc.getGDBThreadID();
-	def getLockID():
+	def getLockID(self):
 		return BaseLockDesc.getVariableValue("mutex")
-	def getSourceLine():
+	def getSourceLine(self):
 		return BaseLockDesc.getFunctionName()+" called from "+BaseLockDesc.getCallingFunctionName()+ " at "+BaseLockDesc.getCallingLocation()
-
-
-class LockTreeBreakPoint(gdb.BreakPoint):
-	def __init__ (self,desc,forrest):
-		super(self).__init__ (desc.location(),gdb.BP_BREAKPOINT,True)
-		self.plugin = desc
-		self.forrest = forrest
 	
-	def stop (self):
-		tid = self.plugin.getThreadID()
-		lid = self.plugin.getLockID()
-		src = self.plugin.getSourceLine()
-		if self.plugin.getType() == "lock":
-			self.forrest.acquire(tid,Lock(lid,src))
-		else:
-			self.forrest.release(tid,Lock(lid,src))
-			
-			
-			
-			
-			
-
-
-
