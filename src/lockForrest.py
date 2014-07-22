@@ -1,5 +1,18 @@
 from collections import deque
 
+class DeadLock:
+	def __init__(self):
+		self.involed_threadsIDs
+		self.involed_locks
+	def __eq__(self, other):
+		if other == None:
+			return False 
+		if type(other) != DeadLock:
+			return False
+		return self.ID == other.ID
+	def __hash__(self):
+		return int(self.ID)
+
 class LockForrest:
 	""" has a LockTree for each thread"""
 	def __init__ (self):
@@ -22,7 +35,7 @@ class LockForrest:
 				if t1 != t2:
 					warnings += self.__checkTreePair(t1,t2)
 		print(warnings)
-		
+
 	def __checkTreePair(self,t1,t2):
 		warnings = ""
 		allLocks = t1.getAllLocksBelow(t1.root.value) | t2.getAllLocksBelow(t2.root.value)

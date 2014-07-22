@@ -18,7 +18,10 @@ class BaseLockDesc:
 	def getLockID(self):
 		""" to be implemented in child"""
 		return None
-	def getSourceLine(self):
+	def getLockInfo(self):
+		""" to be implemented in child"""
+		return "Unkown"
+	def getCallInfo(self):
 		""" to be implemented in child"""
 		return "Unkown"
 	
@@ -39,6 +42,21 @@ class BaseLockDesc:
 			return value
 		except Exception as e:
 			print(e)
+	def getVariableNameForPointer(variable_ptr):
+		"""returns the name of the Variable the pointer variable_ptr points to """
+		if variable_ptr.type.code != gdb.TYPE_CODE_PTR:
+			return
+		ptr = hex(int(variable_ptr))
+		varname = gdb.execute("info symbol "+ptr,False,True)
+		if varname[:len("No symbol matches")] != "No symbol matches":
+			varname = varname.split(" ")
+			if len(varname) > 0:
+				return varname[0]
+	def getDefinitionLocationOfVariable(name):
+		r = gdb.lookup_symbol(name)
+		sym = r[0]
+		if sym != None:
+			return str(sym.symtab.filename)+":"+str(sym.line)
 	def getCallingFunctionName():
 		try:
 			frame = gdb.newest_frame().older()
@@ -76,7 +94,12 @@ class PthreadLockDesc(BaseLockDesc):
 		return BaseLockDesc.getGDBThreadID();
 	def getLockID(self):
 		return BaseLockDesc.getVariableValue("mutex")
-	def getSourceLine(self):
+	def getLockInfo(self):
+		lock_ptr = BaseLockDesc.getVariableValue("mutex")
+		lock_name = BaseLockDesc.getVariableNameForPointer(lock_ptr)
+		def_location = BaseLockDesc.getDefinitionLocationOfVariable(lock_name)
+		return lock_name+" defined at "+def_location
+	def getCallInfo(self):
 		return BaseLockDesc.getFunctionName()+" called from "+BaseLockDesc.getCallingFunctionName()+ " at "+BaseLockDesc.getCallingLocation()
 		
 class QMutexLockDesc(BaseLockDesc):
@@ -86,7 +109,12 @@ class QMutexLockDesc(BaseLockDesc):
 		return BaseLockDesc.getGDBThreadID();
 	def getLockID(self):
 		return BaseLockDesc.getVariableValue("this")
-	def getSourceLine(self):
+	def getLockInfo(self):
+		lock_ptr = BaseLockDesc.getVariableValue("this")
+		lock_name = BaseLockDesc.getVariableNameForPointer(lock_ptr)
+		def_location = BaseLockDesc.getDefinitionLocationOfVariable(lock_name)
+		return lock_name+" defined at "+def_location
+	def getCallInfo(self):
 		return BaseLockDesc.getFunctionName()+" called from "+BaseLockDesc.getCallingFunctionName()+ " at "+BaseLockDesc.getCallingLocation()
 		
 class QMutexUnlockDesc(BaseLockDesc):
@@ -96,7 +124,12 @@ class QMutexUnlockDesc(BaseLockDesc):
 		return BaseLockDesc.getGDBThreadID();
 	def getLockID(self):
 		return BaseLockDesc.getVariableValue("this")
-	def getSourceLine(self):
+	def getLockInfo(self):
+		lock_ptr = BaseLockDesc.getVariableValue("this")
+		lock_name = BaseLockDesc.getVariableNameForPointer(lock_ptr)
+		def_location = BaseLockDesc.getDefinitionLocationOfVariable(lock_name)
+		return lock_name+" defined at "+def_location
+	def getCallInfo(self):
 		return BaseLockDesc.getFunctionName()+" called from "+BaseLockDesc.getCallingFunctionName()+ " at "+BaseLockDesc.getCallingLocation()
 
 class PthreadUnlockDesc(BaseLockDesc):
@@ -106,6 +139,11 @@ class PthreadUnlockDesc(BaseLockDesc):
 		return BaseLockDesc.getGDBThreadID();
 	def getLockID(self):
 		return BaseLockDesc.getVariableValue("mutex")
-	def getSourceLine(self):
+	def getLockInfo(self):
+		lock_ptr = BaseLockDesc.getVariableValue("mutex")
+		lock_name = BaseLockDesc.getVariableNameForPointer(lock_ptr)
+		def_location = BaseLockDesc.getDefinitionLocationOfVariable(lock_name)
+		return lock_name+" defined at "+def_location
+	def getCallInfo(self):
 		return BaseLockDesc.getFunctionName()+" called from "+BaseLockDesc.getCallingFunctionName()+ " at "+BaseLockDesc.getCallingLocation()
 	

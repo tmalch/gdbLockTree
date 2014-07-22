@@ -42,8 +42,8 @@ class Lock:
 	def __hash__(self):
 		return int(self.ID)
 	def __str__(self):
-		return " "+str(self.ID) #+" called at "+self.info
-		
+		return " "+str(self.ID)
+
 class LockTreeBreakPoint(gdb.Breakpoint):
 	def __init__ (self,desc,forrest):
 		super(LockTreeBreakPoint,self).__init__ (desc.location(),gdb.BP_BREAKPOINT,True)
@@ -53,13 +53,14 @@ class LockTreeBreakPoint(gdb.Breakpoint):
 	def stop (self):
 		tid = self.plugin.getThreadID()
 		lid = self.plugin.getLockID()
-		src = self.plugin.getSourceLine()
+		linfo = self.plugin.getLockInfo()
+		#self.plugin.getCallInfo()
 		if self.plugin.getType() == BaseLockDesc.ACQ:
 			print("Thread "+str(tid)+" acquires Lock "+str(lid))
-			self.forrest.acquire(tid,Lock(lid,src))
+			self.forrest.acquire(tid,Lock(lid,linfo))
 		else:
 			print("Thread "+str(tid)+" releases Lock "+str(lid))
-			self.forrest.release(tid,Lock(lid,src))
+			self.forrest.release(tid,Lock(lid,linfo))
 		return False #don't stop
 
 class LockTreeCommand (gdb.Command):
@@ -73,19 +74,21 @@ class LockTreeCommand (gdb.Command):
 		self.registery = {"pthread":(PthreadUnlockDesc(),PthreadLockDesc()),
 											"qmutex":(QMutexLockDesc(),QMutexUnlockDesc())}
 		self.forrest = LockForrest()
-		self.subCommands = {"addLockType":self.registerLockType, #register a new lockDescription plugin
-												"lockTypes":self.printLockType,
+		self.subCommands = {"addlocktype":self.registerLockType, #register a new lockDescription plugin
+												"locktypes":self.printLockType,
 												"monitore":self.createBreakpoints,# create Breakpoints for all stated lockDescriptions given in a space seperated list
 												"stop":self.deleteBreakpoints,# delete all Breakpoints set by LockTree
 												"check":self.check, # Run the Deadlock Detection
-												"printThreads":self.printThreads,# print the current list of ThreadIDs that have acquired a lock
-												"printTree":self.printTree,# print the current locktree for the given ThreadID
+												"printthreads":self.printThreads,# print the current list of ThreadIDs that have acquired a lock
+												"printtree":self.printTree,# print the current locktree for the given ThreadID
 													 }
 	def invoke (self, arg, from_tty):
 		argv = gdb.string_to_argv(arg)
-		if len(argv) > 0:
-			self.subCommands[argv[0]](argv)
-		else:
+		try:
+			command = argv[0].lower()
+			self.subCommands[command](argv)
+		except Exception as e:
+			print(e)
 			for command in self.subCommands.keys():
 				print(command)
 
