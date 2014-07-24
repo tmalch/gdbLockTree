@@ -1,5 +1,10 @@
-from pthreadPlugin import *
-from lockForrest import *
+
+import sys
+sys.path.append('/home/cloud/projects/AKBS/gdbPythonLocktree/src')
+print(sys.path)
+
+from lockForrest import * 
+from lockPlugin import * 
 
 
 class StopHandler:
@@ -51,7 +56,7 @@ class Lock:
 
 class LockTreeBreakPoint(gdb.Breakpoint):
 	def __init__ (self,desc,forrest):
-		super(LockTreeBreakPoint,self).__init__ (desc.location(),gdb.BP_BREAKPOINT,True)
+		super(LockTreeBreakPoint,self).__init__ (desc.location(),type=gdb.BP_BREAKPOINT,internal=True)
 		self.plugin = desc
 		self.forrest = forrest
 
@@ -59,7 +64,7 @@ class LockTreeBreakPoint(gdb.Breakpoint):
 		tid = self.plugin.getThreadID()
 		lid = self.plugin.getLockID()
 		linfo = self.plugin.getLockInfo()
-		cinfo = self.plugin.getCallInfo()
+		cinfo = self.plugin.getCallLocation()
 		if self.plugin.getType() == BaseLockDesc.ACQ:
 			print("Thread "+str(tid)+" acquires Lock "+str(lid))
 			self.forrest.acquire(tid,Lock(lid,linfo,"acquired: "+cinfo))
