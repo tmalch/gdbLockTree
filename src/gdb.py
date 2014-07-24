@@ -1,6 +1,6 @@
 from pthreadPlugin import *
 from lockForrest import *
-print(gdb.PYTHONDIR)
+
 
 
 class StopHandler:

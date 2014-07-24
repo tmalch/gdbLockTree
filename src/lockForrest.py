@@ -1,17 +1,6 @@
 from collections import deque
 
-class DeadLock:
-	def __init__(self):
-		self.involed_threadsIDs
-		self.involed_locks
-	def __eq__(self, other):
-		if other == None:
-			return False 
-		if type(other) != DeadLock:
-			return False
-		return self.ID == other.ID
-	def __hash__(self):
-		return int(self.ID)
+
 
 class LockForrest:
 	""" has a LockTree for each thread"""
@@ -38,7 +27,7 @@ class LockForrest:
 
 	def __checkTreePair(self,t1,t2):
 		warnings = ""
-		allLocks = t1.getAllLocksBelow(t1.root.value) | t2.getAllLocksBelow(t2.root.value)
+		allLocks = t1.getAllLocksBelow(t1.root.value)
 		for lock_id in allLocks:
 			t1below = t1.getAllLocksBelow(lock_id)
 			t1above = t1.getAllHoldLocks(lock_id)
@@ -101,11 +90,7 @@ class LockTree:
 				path.reverse()
 				newsubtreeRoot = releasedNode.parent
 				for node in path:
-					#newnode = Node(node.value)
-					#newsubtreeRoot.addChild(newnode)
-					#newsubtreeRoot = newnode
 					self.acquire(node.value)
-				#self.currentNode = newsubtreeRoot
 
 	def __getPathFromUpTo(self,node,lock_id):
 		path = []
@@ -231,7 +216,3 @@ class Node:
 		return self.printNode()
 
 
-
-# Class Lock
-#  abstraktion eines Locks
-#  jedes obj hat eine eindeutige ID die es einem Lock im Inferior zuweist
