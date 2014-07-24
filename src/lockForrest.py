@@ -1,7 +1,6 @@
 from collections import deque
 
 
-
 class LockForrest:
 	""" has a LockTree for each thread"""
 	def __init__ (self):
@@ -69,6 +68,7 @@ class LockTree:
 		if Node(lock_id) in self.currentNode.children:
 			# follow given path if already taken in the past
 			self.currentNode = self.currentNode.getChild(Node(lock_id))
+			self.currentNode.value.addCallLoc(lock_id.callLocations)
 		else:
 			childnode = Node(lock_id)
 			self.currentNode.addChild(childnode)
@@ -78,6 +78,7 @@ class LockTree:
 		if lock_id == None:
 			return
 		if self.currentNode.value == lock_id:
+			self.currentNode.value.addCallLoc(lock_id.callLocations)
 			self.currentNode = self.currentNode.parent
 		else:
 			path = self.__getPathFromUpTo(self.currentNode,lock_id)
@@ -86,6 +87,7 @@ class LockTree:
 			else:
 #				add a copy of all still acquired Locks as childs to the Lock above the released one
 				releasedNode = path[-1]
+				releasedNode.value.addCallLoc(lock_id.callLocations)
 				path = path[:-1]
 				path.reverse()
 				newsubtreeRoot = releasedNode.parent

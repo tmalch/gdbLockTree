@@ -2,7 +2,6 @@ from pthreadPlugin import *
 from lockForrest import *
 
 
-
 class StopHandler:
 	lockseq = "lockseq: "
 	def __call__(self,event):
@@ -30,9 +29,12 @@ class StopHandler:
 		print(self.lockseq)
 
 class Lock:
-	def __init__(self,lockid,sourceline):
+	def __init__(self,lockid,lock_location,call_location):
 		self.ID = lockid
-		self.info = sourceline
+		self.info = lock_location
+		self.callLocations = set([call_location])
+	def addCallLoc(self,call_loc):
+		self.callLocations.update(call_loc)
 	def __eq__(self, other):
 		if other == None:
 			return False 
@@ -42,7 +44,10 @@ class Lock:
 	def __hash__(self):
 		return int(self.ID)
 	def __str__(self):
-		return " "+str(self.ID)
+		call_loc_str = ""
+		for x in self.callLocations:
+			call_loc_str += x+"\n"
+		return " "+str(self.ID)+"\n"+call_loc_str
 
 class LockTreeBreakPoint(gdb.Breakpoint):
 	def __init__ (self,desc,forrest):
@@ -54,13 +59,13 @@ class LockTreeBreakPoint(gdb.Breakpoint):
 		tid = self.plugin.getThreadID()
 		lid = self.plugin.getLockID()
 		linfo = self.plugin.getLockInfo()
-		#self.plugin.getCallInfo()
+		cinfo = self.plugin.getCallInfo()
 		if self.plugin.getType() == BaseLockDesc.ACQ:
 			print("Thread "+str(tid)+" acquires Lock "+str(lid))
-			self.forrest.acquire(tid,Lock(lid,linfo))
+			self.forrest.acquire(tid,Lock(lid,linfo,"acquired: "+cinfo))
 		else:
 			print("Thread "+str(tid)+" releases Lock "+str(lid))
-			self.forrest.release(tid,Lock(lid,linfo))
+			self.forrest.release(tid,Lock(lid,linfo,"released: "+cinfo))
 		return False #don't stop
 
 class LockTreeCommand (gdb.Command):
