@@ -3,9 +3,9 @@
 type = "lock"
 def register(name,plugin):
 	pass
-def acquire(tid,lid,linfo,call_location):
+def acquire(tid,lid,thread_info="",lock_info="",call_location=""):
 	print("acquire")
-def release(tid,lid,linfo,call_location):
+def release(tid,lid,thread_info="",lock_info="",call_location=""):
 	print("release")
 
 

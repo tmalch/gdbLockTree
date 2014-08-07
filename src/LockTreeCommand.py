@@ -31,8 +31,8 @@ class LockTreeCommand(gdb.Command):
 		super (LockTreeCommand, self).__init__ ("locktree", gdb.COMMAND_USER)
 		self.dont_repeat()
 		self.breakpoints = []
-		self.subCommands = {"addlockplugin":self.registerLockPlugin, #register a new lockDescription plugin
-												"locktypes":self.printLockType,
+		self.subCommands = {"addplugin":self.registerNewPlugin, #register a new lockDescription plugin
+												"plugins":self.printPlugins,
 												"monitore":self.createBreakpoints,# create Breakpoints for all stated lockDescriptions given in a space seperated list
 												"stop":self.deleteBreakpoints,# delete all Breakpoints set by LockTree
 												"check":self.check, # Run the Deadlock Detection
@@ -58,11 +58,11 @@ class LockTreeCommand(gdb.Command):
 				__import__("plugins."+file[:-3])
 				print("import pluginFile "+file)
 
-	def registerLockPlugin(self,argv):
+	def registerNewPlugin(self,argv):
 		""" add a plugin from another place than the plugins directory"""
 		pass
 		
-	def printLockType(self,argv):
+	def printPlugins(self,argv):
 		for ltype in LockTreeCommand.registery.keys():
 			print(ltype)
 	def createBreakpoints(self,argv):
@@ -83,19 +83,20 @@ class LockTreeCommand(gdb.Command):
 		for br in self.breakpoints:
 			br.delete()
 		self.breakpoints = []
+
 	def check(self,argv):
 		"""Run the Deadlock Detection"""
 		LockTreeAlgo.forrest.check()
+
 	def printThreads(self,argv):
 		"""print the current list of ThreadIDs that have acquired a lock"""
-		res=""
 		for x in LockTreeAlgo.forrest.getThreadList():
-			res+=str(x)+" "
-		print(res)
+			print(x)
+
 	def printTree(self,argv):
 		""" print the current locktree for the given ThreadID"""
 		if len(argv) > 1:
-			LockTreeAlgo.forrest.printTree(int(argv[1]))
+			LockTreeAlgo.forrest.printTree(LockTreeAlgo.Thread(int(argv[1])))
 			
 
 LockTreeCommand()

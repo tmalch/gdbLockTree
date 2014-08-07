@@ -1,9 +1,27 @@
 from collections import deque
 
-def acquire(tid,lock_id,lock_info,call_location):
-	forrest.acquire(tid,Lock(lock_id,lock_info,"acquired: "+call_location))
-def release(tid,lock_id,lock_info,call_location):
-	forrest.release(tid,Lock(lock_id,lock_info,"released: "+call_location))
+def acquire(tid,lock_id,thread_info="", lock_info="",call_location=""):
+	forrest.acquire(Thread(tid,thread_info),Lock(lock_id,lock_info,"acquired: "+call_location))
+
+def release(tid,lock_id,thread_info="", lock_info="",call_location=""):
+	forrest.release(Thread(tid,thread_info),Lock(lock_id,lock_info,"released: "+call_location))
+
+class Thread:
+	def __init__(self,thread_id,thread_info=""):
+		self.ID = thread_id
+		self.info = thread_info
+
+	def __eq__(self, other):
+		if other == None:
+			return False 
+		if type(other) != Thread:
+			return False
+		return self.ID == other.ID
+	def __hash__(self):
+		return int(self.ID)
+	def __str__(self):
+		return str(self.info)+":"+str(self.ID)
+
 class Lock:
 	def __init__(self,lockid,lock_location,call_location):
 		self.ID = lockid
@@ -30,16 +48,17 @@ class LockForrest:
 	def __init__ (self):
 		self.trees = {}
 	
-	def acquire(self,thread_id,lock_id):
-		if thread_id not in self.trees:
-			self.trees[thread_id] = LockTree(thread_id)
-		self.trees[thread_id].acquire(lock_id)
+	def acquire(self,thread,lock):
+		if thread not in self.trees:
+			self.trees[thread] = LockTree(thread)
+		self.trees[thread].acquire(lock)
 	
-	def release(self,thread_id,lock_id):
-		if thread_id not in self.trees:
+	def release(self,thread,lock):
+		if thread not in self.trees:
 			print("ERROR? thread never acqired lock but releases it")
-			self.trees[thread_id] = LockTree(thread_id)
-		self.trees[thread_id].release(lock_id)
+			self.trees[thread] = LockTree(thread)
+		self.trees[thread].release(lock)
+		
 	def check(self):
 		warnings = ""
 		for t1 in self.trees.values():
@@ -69,11 +88,12 @@ class LockForrest:
 		return warnings
 	def getThreadList(self):
 		return self.trees.keys()
-	def printTree(self,thread_id):
-		if thread_id not in self.trees:
-			print("no LockTree for Thread "+str(thread_id))
+	
+	def printTree(self,thread):
+		if thread not in self.trees:
+			print("no LockTree for Thread "+str(thread))
 		else:
-			self.trees[thread_id].printTree()
+			self.trees[thread].printTree()
 
 class LockTree: 
 	"""  represents lockTree of one Thread"""

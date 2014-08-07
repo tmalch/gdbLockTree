@@ -18,8 +18,8 @@ class QMutextBP(PluginBase):
 		lid = lock_ptr
 		lock_name = GDBHelper.getVariableNameForPointer(lock_ptr)
 		linfo = lock_name + "defined at "+GDBHelper.getDefinitionLocationOfVariable(lock_name)
-		call_location = GDBHelper.getFunctionName()+" called from "+GDBHelper.getCallingFunctionName()+ " at "+GDBHelper.getCallingLocation()
-		self.function(tid,lid,linfo,call_location)
+		call_loc = GDBHelper.getFunctionName()+" called from "+GDBHelper.getCallingFunctionName()+ " at "+GDBHelper.getCallingLocation()
+		self.function(tid,lid,lock_info=linfo,call_location=call_loc)
 
 
 QMutextBP("QMutex::lock",Interface.acquire)
