@@ -1,0 +1,15 @@
+
+
+LockTree Algo für GDB
+
+sollte eigentlich recht gut funktionieren 
+
+TODO
+*Mit SWEB testen
+
+*besserer Ausgabe
+	LockTrees als Grafiken anzeigen (pyQt)
+	possible Deadlocks besser aufbereiten
+
+*analysieren welche weiteren Hilfestelungen dem Benutzer gegeben werden könnten 
+
