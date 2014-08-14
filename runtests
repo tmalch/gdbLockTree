@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+
+import unittest
+import gdbLockTree.tests.LockTreeTests as LockTreeTests
+import gdbLockTree.tests.TreeTests as TreeTests
+
+suite1 = unittest.TestLoader().loadTestsFromTestCase(LockTreeTests.BasicLockTreeTests)
+suite2 = unittest.TestLoader().loadTestsFromTestCase(TreeTests.BasicTreeTests)
+
+unittest.TextTestRunner(verbosity=2).run(suite1)
+unittest.TextTestRunner(verbosity=2).run(suite2)

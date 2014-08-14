@@ -1,7 +1,7 @@
 
-from pluginBase import PluginBase
-import gdbHelper as GDBHelper
-import LockInterface
+from .. import gdbHelper as GDBHelper
+from ..pluginBase import PluginBase
+from .. import LockInterface
 
 class pthreadMutex(PluginBase):
 	def __init__(self,location,function):

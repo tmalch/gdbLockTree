@@ -1,7 +1,9 @@
 import random
 import unittest
-from lockForrest import LockTree
-from lockForrest import Node
+
+from ..LockTreeAlgo import LockTree
+from ..LockTreeAlgo import Node
+
 class BasicLockTreeTests(unittest.TestCase):
 
 		def setUp(self):
@@ -24,37 +26,37 @@ class BasicLockTreeTests(unittest.TestCase):
 			self.l1_1.addChild(self.l3_1d)
 			self.l = LockTree(1234)
 			self.l.root = self.root
-			self.l.actualNode = self.root
+			self.l.currentNode = self.root
 			
 		def test_acquire(self):
 			self.l.printTree()
 			tree = LockTree(555)
 			tree.acquire(7)
 			tree.acquire(77)
-			self.assertEqual(tree.actualNode.value,77)
-			self.assertEqual(tree.actualNode.parent.value,7)
+			self.assertEqual(tree.currentNode.value,77)
+			self.assertEqual(tree.currentNode.parent.value,7)
 			tree.acquire(None)
 			self.assertEqual(tree.size(),3)
 			tree.acquire(77)#reentrant
 			self.assertEqual(tree.size(),3)
-			self.assertEqual(tree.actualNode.value,77)
+			self.assertEqual(tree.currentNode.value,77)
 						
 		def test_release(self):
 			tree = LockTree(555)
 			tree.release(99)#release never acquired
 			self.assertEqual(tree.size(),1)
-			self.assertEqual(tree.actualNode.value,None)
+			self.assertEqual(tree.currentNode.value,None)
 			tree.acquire(7)
 			self.assertEqual(tree.size(),2)
-			self.assertEqual(tree.actualNode.value,7)
+			self.assertEqual(tree.currentNode.value,7)
 			tree.release(99)
 			self.assertEqual(tree.size(),2)
 			tree.release(7)
-			self.assertEqual(tree.actualNode.value,None)
+			self.assertEqual(tree.currentNode.value,None)
 			
 			
 		def test_acquirerelease(self):
-			self.l.actualNode = self.root.find(Node(30))
+			self.l.currentNode = self.root.find(Node(30))
 			self.l.release(1)
 			self.assertEqual(self.l.size(),10)
 			t = self.root.findAll(Node(30))

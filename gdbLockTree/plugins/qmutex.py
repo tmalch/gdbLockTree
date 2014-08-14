@@ -1,7 +1,7 @@
 
-import gdbHelper as GDBHelper
-from pluginBase import PluginBase
-import LockInterface as Interface
+from .. import gdbHelper as GDBHelper
+from ..pluginBase import PluginBase
+from .. import LockInterface as Interface
 
 #interface.acquire(tid,lock_id,lock_info,call_location)
 #interface.release(tid,lock_id,lock_info,call_location)

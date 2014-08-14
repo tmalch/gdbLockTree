@@ -1,11 +1,13 @@
-import gdb
 import sys
-sys.path.append('/home/cloud/projects/AKBS/gdbPythonLocktree/src')
-print(sys.path)
-
-import LockTreeAlgo
-import LockInterface
 from os import listdir
+import os
+
+import gdb
+basedir = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(basedir)
+
+import gdbLockTree.LockInterface as LockInterface
+import gdbLockTree.LockTreeAlgo as LockTreeAlgo
 
 class MyBreakpoint(gdb.Breakpoint):
 	def __init__ (self,plugin):
@@ -19,6 +21,7 @@ class MyBreakpoint(gdb.Breakpoint):
 class LockTreeCommand(gdb.Command):
 	"""Greet the whole world."""
 	registery = {}
+	pluginlocation = basedir+"/gdbLockTree/plugins/"
 	
 	def registerPlugin(name,plugin):		
 		print("register new plugin "+name)
@@ -50,13 +53,14 @@ class LockTreeCommand(gdb.Command):
 			for command in self.subCommands.keys():
 				print(command)
 	def importPluginFiles(self):
+		print(LockTreeCommand.pluginlocation)
 		LockInterface.acquire = LockTreeAlgo.acquire
 		LockInterface.release = LockTreeAlgo.release
 		LockInterface.register = LockTreeCommand.registerPlugin
-		for file in listdir("/home/cloud/projects/AKBS/gdbPythonLocktree/src/plugins"):
-			if not file.startswith("__") and file.endswith(".py"):
-				__import__("plugins."+file[:-3])
-				print("import pluginFile "+file)
+		plugin_files = filter(lambda x: x.endswith('.py') and x != '__init__.py', os.listdir(LockTreeCommand.pluginlocation))
+		for file in plugin_files:
+			__import__("gdbLockTree.plugins."+file[:-3])
+			print("import pluginFile "+file)
 
 	def registerNewPlugin(self,argv):
 		""" add a plugin from another place than the plugins directory"""

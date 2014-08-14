@@ -264,10 +264,4 @@ class Node:
 
 forrest = LockForrest()
 
-class BPPluginInterface:
-	def release(tid,lid,linfo,call_location):
-		forrest.release(tid,Lock(lid,linfo,"released: "+call_location))
-	def acquire(tid,lid,linfo,call_location):
-		forrest.acquire(tid,Lock(lid,linfo,"acquired: "+call_location))
-
 

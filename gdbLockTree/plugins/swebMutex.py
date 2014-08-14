@@ -1,7 +1,7 @@
 import gdb
-import gdbHelper as GDBHelper
-from pluginBase import PluginBase
-import LockInterface as Interface
+from .. import gdbHelper as GDBHelper
+from ..pluginBase import PluginBase
+from .. import LockInterface as Interface
 
 name = "swebmutex"
 
