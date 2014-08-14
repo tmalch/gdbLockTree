@@ -6,3 +6,7 @@ link LockTreeCommand.py and folder gdbLockTree into /usr/share/gdb/python/gdb/co
 ln -s LockTreeCommand.py /usr/share/gdb/python/gdb/command/LockTreeCommand.py
 ln -s gdbLockTree /usr/share/gdb/python/gdb/command/gdbLockTree
 
+OR
+
+exec 'source path/to/LockTreeCommand.py' from within gdb
+
