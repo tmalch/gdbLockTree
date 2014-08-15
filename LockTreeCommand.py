@@ -5,7 +5,7 @@ import os
 import gdb
 basedir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(basedir)
-
+print(sys.path)
 import gdbLockTree.LockInterface as LockInterface
 import gdbLockTree.LockTreeAlgo as LockTreeAlgo
 

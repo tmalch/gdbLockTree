@@ -2,7 +2,7 @@ import random
 import unittest
 
 from ..LockTreeAlgo import LockTree
-from ..LockTreeAlgo import Node
+from ..Node import Node
 
 class BasicLockTreeTests(unittest.TestCase):
 

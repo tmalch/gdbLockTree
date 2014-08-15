@@ -1,4 +1,4 @@
-from collections import deque
+from .Node import Node
 
 def acquire(tid,lock_id,thread_info="", lock_info="",call_location=""):
 	forrest.acquire(Thread(tid,thread_info),Lock(lock_id,lock_info,"acquired: "+call_location))
@@ -43,6 +43,12 @@ class Lock:
 			call_loc_str += x+"\n"
 		return " "+str(self.ID)+"\n"+call_loc_str
 
+class DeadLock:
+	"""represents all information about a possible deadlock
+		involvedlocks: the locks that have triggered the warning, list of Lock objects
+		involvedthreads: the Threads that are involved, list of Thread objects """
+	def __init__(self,involvedlocks,involvedthreads,gatelock=None):
+		pass
 class LockForrest:
 	""" has a LockTree for each thread"""
 	def __init__ (self):
@@ -78,14 +84,17 @@ class LockForrest:
 			if len(possible_deadlocks)	!= 0:
 				#check for gatelock
 				gatelocks = t1above & t2above
+				stringlist = [str(l.info) for l in possible_deadlocks]
+				stringlist.append(str(lock_id.info))
 				if len(gatelocks) > 0:
 					#print("prevented by gatelock"+str(gatelocks))
-					warnings += "possible deadlock between "+str(t1.threadID)+" and "+str(t2.threadID)+": "+str(possible_deadlocks)
-					warnings += " prevented by gatelock"+str(gatelocks)+"\n"
+					warnings += "possible deadlock between "+str(t1.thread)+" and "+str(t2.thread)+": "+str(stringlist)
+					warnings += " prevented by gatelock"+str([str(l.info) for l in gatelocks])+"\n"
 				else:
-					#print("possible deadlock between "+str(t1.threadID)+" and "+str(t2.threadID)+": "+str(possible_deadlocks))
-					warnings += "possible deadlock between "+str(t1.threadID)+" and "+str(t2.threadID)+": "+str(possible_deadlocks)+"\n"
+					#print("possible deadlock between "+str(t1.thread)+" and "+str(t2.thread)+": "+str(possible_deadlocks))
+					warnings += "possible deadlock between "+str(t1.thread)+" and "+str(t2.thread)+": "+str(stringlist)+"\n"
 		return warnings
+
 	def getThreadList(self):
 		return self.trees.keys()
 	
@@ -97,8 +106,8 @@ class LockForrest:
 
 class LockTree: 
 	"""  represents lockTree of one Thread"""
-	def __init__ (self,threadID):
-		self.threadID = threadID
+	def __init__ (self,thread):
+		self.thread = thread
 		self.root = Node(None)
 		self.currentNode = self.root
 	def size(self):
@@ -118,23 +127,23 @@ class LockTree:
 			self.currentNode.addChild(childnode)
 			self.currentNode = childnode
 
-	def release(self,lock_id):
-		if lock_id == None:
+	def release(self,lock):
+		if lock == None:
 			return
-		if self.currentNode.value == lock_id:
-			self.currentNode.value.addCallLoc(lock_id.callLocations)
+		if self.currentNode.value == lock:
+			self.currentNode.value.addCallLoc(lock.callLocations)
 			self.currentNode = self.currentNode.parent
 		else:
-			path = self.__getPathFromUpTo(self.currentNode,lock_id)
+			path = self.__getPathFromUpTo(self.currentNode,lock)
 			if path == None:
-				print("ERROR? release not acquired lock"+str(lock_id))
+				print("ERROR? release not acquired lock"+str(lock))
 			else:
 #				add a copy of all still acquired Locks as childs to the Lock above the released one
 				releasedNode = path[-1]
-				releasedNode.value.addCallLoc(lock_id.callLocations)
+				releasedNode.value.addCallLoc(lock.callLocations)
 				path = path[:-1]
 				path.reverse()
-				newsubtreeRoot = releasedNode.parent
+				self.currentNode = releasedNode.parent
 				for node in path:
 					self.acquire(node.value)
 
@@ -168,99 +177,6 @@ class LockTree:
 
 	def printTree(self):
 		print(self.root.printNode())
-
-
-class Node:
-	def __init__(self,value,parent=None):
-		self.parent = parent
-		self.children = []
-		self.value = value
-	def __eq__(self, other):		
-		if other == None:
-			return False 
-		if type(other) != Node:
-			return False 
-		return self.value == other.value
-	def isRoot(self):
-		return self.parent == None
-	def isLeaf(self):
-		return len(self.children) == 0
-	def getNumChildren(self):
-		return len(self.children)
-	def getChild(self,query):
-		for child in self.children:
-			if child == query:
-				return child
-		#not found
-		return None
-	def addChild(self,childnode):
-		childnode.parent = self
-		self.children.append(childnode)
-		
-	def getAllChildrenBFS_G(self):
-		""" a Generator that returns all children of this node in BFS order
-				this node as first"""	
-		queue = deque([self])
-		while len(queue) > 0:
-			n = queue.popleft()
-			yield n
-			queue.extend(n.children)
-			
-			
-	def find(self,query,order = getAllChildrenBFS_G):
-		"""find first occurence of query; Breadth First Search """
-		for node in order(self):
-			if node == query:
-				return node
-		
-	def findAll(self,query,order = getAllChildrenBFS_G):
-		"""find all occurence of query; Breadth First Search """
-		occurences = []
-		for node in order(self):
-			if node == query:
-				occurences.append(node)
-		return occurences
-
-	def getAllParents(self):
-		"""returns list of all parents of this node up to the Root element"""
-		return [node for node in self.getAllParents_G() ]
-
-	def getAllParents_G(self):
-		"""a Generator which returns all parents of this node up to the Root element
-				this node as first"""
-		yield self
-		if not self.isRoot():
-			yield from self.parent.getAllParents_G()
-
-	def getAllChildrenDFS_G(self):
-		""" a Generator that returns all children of this node in DFS order
-				this node as first"""	
-		yield self
-		for child in self.children:
-			yield from child.getAllChildrenDFS_G()
-			
-	def isAbove(self,query):
-		"""returns True if this Node or any parent Node has requested value"""
-		for p in self.getAllParents_G():
-			if p == query:
-				return True
-		return False
-	def isBelow(self,query):
-		"""returns True if this Node or any descendent Node has requested value (wrapper for find)"""
-		r = self.find(query)
-		if r == None:
-			return False
-		else:
-			return True
-	def printNode(self,prefix=""):
-		""" returns string representation of the subTree starting in self"""
-		res = prefix+"|--"+str(self.value)+"\n"
-		for n in self.children:
-			res += n.printNode(prefix=prefix+"|  ")
-		return res
-	def __str__(self):
-		return self.printNode()
-
 
 forrest = LockForrest()
 

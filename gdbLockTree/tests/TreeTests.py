@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from ..LockTreeAlgo import Node
+from ..Node import Node
 
 class BasicTreeTests(unittest.TestCase):
 		def setUp(self):
