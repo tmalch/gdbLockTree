@@ -6,37 +6,37 @@ class Node:
         self.parent = parent
         self.children = []
         self.value = value
-    def __eq__(self, other):        
-        if other == None:
-            return False 
-        if type(other) != Node:
-            return False 
-        return self.value == other.value
+#    def __eq__(self, other):        
+#        if other == None:
+#            return False 
+#        if type(other) != type(self):
+#            return False 
+#        return self.value == other.value
     def isRoot(self):
         return self.parent == None
     def isLeaf(self):
         return len(self.children) == 0
     def getNumChildren(self):
         return len(self.children)
-    def getChild(self,query):
+    def findChild(self,query):
         for child in self.children:
-            if child == query:
+            if child.value == query:
                 return child
         #not found
         return None
     def addChild(self,childnode):
         childnode.parent = self
         self.children.append(childnode)
-    def printNode(self,prefix=""):
+    def printSubTree(self,prefix=""):
         """ returns string representation of the subTree starting in self"""
         res = prefix+"|--"+str(self.value)+"\n"
         for n in self.children:
-            res += n.printNode(prefix=prefix+"|  ")
+            res += n.printSubTree(prefix=prefix+"|  ")
         return res
     def __str__(self):
-        return self.printNode()
+        return str(self.value)
         
-        
+# Methods operating on the SubTree        
         
     def getAllChildrenBFS_G(self):
         """ a Generator that returns all children of this node in BFS order
@@ -51,14 +51,14 @@ class Node:
     def find(self,query,order = getAllChildrenBFS_G):
         """find first occurence of query; Breadth First Search """
         for node in order(self):
-            if node == query:
+            if node.value == query:
                 return node
         
     def findAll(self,query,order = getAllChildrenBFS_G):
         """find all occurence of query; Breadth First Search """
         occurences = []
         for node in order(self):
-            if node == query:
+            if node.value == query:
                 occurences.append(node)
         return occurences
 
@@ -79,11 +79,22 @@ class Node:
         yield self
         for child in self.children:
             yield from child.getAllChildrenDFS_G()
-            
+    def branch_G(self):
+        branch = []
+        prev_branch = []
+        for n in self.getAllChildrenDFS_G():
+            if n.parent in prev_branch:    
+                branch = prev_branch[:prev_branch.index(n.parent)]
+                branch.append(n.parent)
+            branch.append(n)
+            if n.isLeaf():
+                yield branch
+                prev_branch = branch 
+                branch = []            
     def isAbove(self,query):
         """returns True if this Node or any parent Node has requested value"""
         for p in self.getAllParents_G():
-            if p == query:
+            if p.value == query:
                 return True
         return False
     def isBelow(self,query):
