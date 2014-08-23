@@ -49,25 +49,25 @@ class Node:
             
             
     def find(self,query,order = getAllChildrenBFS_G):
-        """find first occurence of query; Breadth First Search """
+        """find the node of first occurrences of value 'query'; Breadth First Search """
         for node in order(self):
             if node.value == query:
                 return node
         
     def findAll(self,query,order = getAllChildrenBFS_G):
-        """find all occurence of query; Breadth First Search """
-        occurences = []
+        """find all Nodes in which the value 'query' occurs; Breadth First Search """
+        occurrences = []
         for node in order(self):
             if node.value == query:
-                occurences.append(node)
-        return occurences
+                occurrences.append(node)
+        return occurrences
 
     def getAllParents(self):
         """returns list of all parents of this node up to the Root element"""
         return [node for node in self.getAllParents_G() ]
 
     def getAllParents_G(self):
-        """a Generator which returns all parents of this node up to the Root element
+        """a Generator which returns all parents of this node up to (including) the Root element
                 this node as first"""
         yield self
         if not self.isRoot():
@@ -80,12 +80,12 @@ class Node:
         for child in self.children:
             yield from child.getAllChildrenDFS_G()
     def branch_G(self):
+        """ returns all branches of the subtree rooted in this node as lists"""
         branch = []
         prev_branch = []
         for n in self.getAllChildrenDFS_G():
             if n.parent in prev_branch:    
-                branch = prev_branch[:prev_branch.index(n.parent)]
-                branch.append(n.parent)
+                branch = prev_branch[:prev_branch.index(n.parent)+1]
             branch.append(n)
             if n.isLeaf():
                 yield branch

@@ -2,19 +2,19 @@ import random
 import unittest
 
 from ..LockTreeAlgo import LockTree
-from ..Node import Node
+from ..LockTreeAlgo import LockTreeNode
 
 class BasicLockTreeTests(unittest.TestCase):
 
 		def setUp(self):
-			self.root = Node(None)
-			self.l1_0 = Node(1)
-			self.l1_1 = Node(2)
-			self.l2_0 = Node(10)
-			self.l2_1 = Node(11)
-			self.l3_0 = Node(30)
-			self.l3_1 = Node(31)
-			self.l3_1d = Node(31)
+			self.root = LockTreeNode(None)
+			self.l1_0 = LockTreeNode(1)
+			self.l1_1 = LockTreeNode(2)
+			self.l2_0 = LockTreeNode(10)
+			self.l2_1 = LockTreeNode(11)
+			self.l3_0 = LockTreeNode(30)
+			self.l3_1 = LockTreeNode(31)
+			self.l3_1d = LockTreeNode(31)
 			
 			self.root.addChild(self.l1_0)
 			self.root.addChild(self.l1_1)
@@ -56,12 +56,12 @@ class BasicLockTreeTests(unittest.TestCase):
 			
 			
 		def test_acquirerelease(self):
-			self.l.currentNode = self.root.find(Node(30))
+			self.l.currentNode = self.root.find(30)
 			self.l.release(1)
 			self.assertEqual(self.l.size(),10)
-			t = self.root.findAll(Node(30))
+			t = self.root.findAll(30)
 			self.assertEqual(len(t),2)
-			t = self.root.findAll(Node(11))
+			t = self.root.findAll(11)
 			self.assertEqual(len(t),2)
 			for n in t:
 				if n is not self.l2_1:
