@@ -3,10 +3,10 @@
 
 TODO
 *Mit SWEB testen
-
+*bei neu starten des programs über gdb den locktree zurücksetzen
 *besserer Ausgabe
 	LockTrees als Grafiken anzeigen (pyQt)
 	possible Deadlocks besser aufbereiten
 
 *analysieren welche weiteren Hilfestelungen dem Benutzer gegeben werden könnten 
-
+*thread segments implementieren

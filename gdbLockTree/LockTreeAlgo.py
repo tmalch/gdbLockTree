@@ -1,10 +1,10 @@
 from .Node import Node
 
-def acquire(tid,lock_id,thread_info="", lock_info="",call_location=""):
-	forrest.acquire(Thread(tid,thread_info),Lock(lock_id,lock_info,"acquired: "+call_location))
+def acquire(tid,lock_id,thread_info="", lock_info="",call_location=None):
+	forrest.acquire(Thread(tid,thread_info),Lock(lock_id,lock_info),call_location)
 
-def release(tid,lock_id,thread_info="", lock_info="",call_location=""):
-	forrest.release(Thread(tid,thread_info),Lock(lock_id,lock_info,"released: "+call_location))
+def release(tid,lock_id,thread_info="", lock_info="",call_location=None):
+	forrest.release(Thread(tid,thread_info),Lock(lock_id,lock_info),call_location)
 
 class Thread:
 	def __init__(self,thread_id,thread_info=""):
@@ -22,13 +22,17 @@ class Thread:
 	def __str__(self):
 		return str(self.info)+":"+str(self.ID)
 
-class Lock:
-	def __init__(self,lockid,lock_location,call_location):
-		self.ID = lockid
-		self.info = lock_location
+class LockTreeNode(Node):
+	def __init__(self,lock,call_location=None,parent=None):
+		Node.__init__(self, lock, parent)
 		self.callLocations = set([call_location])
 	def addCallLoc(self,call_loc):
 		self.callLocations.update(call_loc)
+		
+class Lock:
+	def __init__(self,lockid,lock_location):
+		self.ID = lockid
+		self.info = lock_location
 	def __eq__(self, other):
 		if other == None:
 			return False 
@@ -38,41 +42,73 @@ class Lock:
 	def __hash__(self):
 		return int(self.ID)
 	def __str__(self):
-		call_loc_str = ""
-		for x in self.callLocations:
-			call_loc_str += x+"\n"
-		return " "+str(self.ID)+"\n"+call_loc_str
+		return str(self.ID)+"\n"
 
 class DeadLock:
 	"""represents all information about a possible deadlock
-		involvedlocks: the locks that have triggered the warning, list of Lock objects
+		involvednodes: two lists of nodes which locks have triggered the warning
 		involvedthreads: the Threads that are involved, list of Thread objects """
-	def __init__(self,involvedlocks,involvedthreads,gatelock=None):
+	def __init__(self,involvedthreads,involvednodes):
 		pass
+	def __hash__(self):
+		pass
+	def __eq__(self, other):
+		pass
+		
 class LockForrest:
 	""" has a LockTree for each thread"""
 	def __init__ (self):
 		self.trees = {}
 	
-	def acquire(self,thread,lock):
+	def acquire(self,thread,lock,call_location=None):
 		if thread not in self.trees:
 			self.trees[thread] = LockTree(thread)
-		self.trees[thread].acquire(lock)
+		self.trees[thread].acquire(lock,call_location)
 	
-	def release(self,thread,lock):
+	def release(self,thread,lock,call_location=None):
 		if thread not in self.trees:
 			print("ERROR? thread never acqired lock but releases it")
 			self.trees[thread] = LockTree(thread)
-		self.trees[thread].release(lock)
+		self.trees[thread].release(lock,call_location)
 		
 	def check(self):
 		warnings = ""
 		for t1 in self.trees.values():
 			for t2 in self.trees.values():
 				if t1 != t2:
-					warnings += self.__checkTreePair(t1,t2)
+					warnings += self.__checkTreePair2(t1,t2)
 		print(warnings)
-
+	def __checkTreePair2(self,t1,t2):
+		""" returns list of all nodes that may cause a deadlock between thread t1 and t2"""
+		def intersect(nodeset1,nodeset2,cmp=lambda n1,n2: n1.value == n2.value):
+			""" intersect two sets of nodes by there values"""
+			intersection1 = []
+			intersection2 = []
+			for node1 in nodeset1:
+				for node2 in nodeset2:
+					if cmp(node1,node2):
+						intersection1.append(node1)
+						intersection2.append(node2)
+			return (intersection1,intersection2)
+		warnings = ""
+		for node1 in t1.root.getAllChildrenDFS_G():
+			t1below_node = [ n for n in node1.getAllChildrenDFS_G() if n is not node1 ]
+			t1above_node = [n for n in node1.getAllParents_G() if n is not (node1 and t1.root) ]
+			for node2 in t2.root.findAll(node1.value):
+				t2above_node = [ n for n in node2.getAllParents_G() if n is not (node2 and t2.root)]
+				(t1deadlocks,t2deadlocks) = intersect(t1below_node,t2above_node,lambda n1,n2: n1.value == n2.value)
+				if len(t1deadlocks)	> 0:
+					#check for gatelock
+					(t1gatelocks,t2gatelocks) = intersect(t1above_node, t2above_node,lambda n1,n2: n1.value == n2.value)
+					stringlist = [str(l.value.info) for l in t1deadlocks]
+					stringlist.append(str(node1.value.info))
+					if len(t1gatelocks) > 0:
+						warnings += "possible deadlock between "+str(t1.thread)+" and "+str(t2.thread)+": "+str(stringlist)
+						warnings += " prevented by gatelock"+str([str(l.value.info) for l in t1gatelocks])+"\n"
+					else:
+						DeadLock((t1.thread,t2.thread),(t1deadlocks,t2deadlocks))
+						warnings += "possible deadlock between "+str(t1.thread)+" and "+str(t2.thread)+": "+str(stringlist)+"\n"
+		return warnings
 	def __checkTreePair(self,t1,t2):
 		warnings = ""
 		allLocks = t1.getAllLocksBelow(t1.root.value)
@@ -108,30 +144,31 @@ class LockTree:
 	"""  represents lockTree of one Thread"""
 	def __init__ (self,thread):
 		self.thread = thread
-		self.root = Node(None)
+		self.root = LockTreeNode(None,None)
 		self.currentNode = self.root
 	def size(self):
 		return len([x for x in self.root.getAllChildrenBFS_G()])
-	def acquire(self,lock_id):
-		if lock_id == None:
+	def acquire(self,lock,callLocation=None):
+		if lock == None:
 			return
-		if self.currentNode.isAbove(Node(lock_id)):
-			print("reentrant lock: Lock "+str(lock_id)+" is still acquired")
+		if self.currentNode.isAbove(lock):
+			print("reentrant lock: Lock "+str(lock)+" is still acquired")
 			# reentrant locks get added again
-		if Node(lock_id) in self.currentNode.children:
+			
+		if self.currentNode.findChild(lock) != None:
 			# follow given path if already taken in the past
-			self.currentNode = self.currentNode.getChild(Node(lock_id))
-			self.currentNode.value.addCallLoc(lock_id.callLocations)
+			self.currentNode = self.currentNode.findChild(lock)
+			self.currentNode.addCallLoc(callLocation)
 		else:
-			childnode = Node(lock_id)
+			childnode = LockTreeNode(lock,callLocation)
 			self.currentNode.addChild(childnode)
 			self.currentNode = childnode
 
-	def release(self,lock):
+	def release(self,lock,callLocation=None):
 		if lock == None:
 			return
 		if self.currentNode.value == lock:
-			self.currentNode.value.addCallLoc(lock.callLocations)
+			self.currentNode.addCallLoc(callLocation)
 			self.currentNode = self.currentNode.parent
 		else:
 			path = self.__getPathFromUpTo(self.currentNode,lock)
@@ -140,7 +177,7 @@ class LockTree:
 			else:
 #				add a copy of all still acquired Locks as childs to the Lock above the released one
 				releasedNode = path[-1]
-				releasedNode.value.addCallLoc(lock.callLocations)
+				releasedNode.addCallLoc(callLocation)
 				path = path[:-1]
 				path.reverse()
 				self.currentNode = releasedNode.parent
@@ -158,7 +195,7 @@ class LockTree:
 
 	def getAllHoldLocks(self,lock_id):
 		"""returns set of all Locks that are ever acquired when the given node is acquired"""
-		query = Node(lock_id)
+		query = lock_id
 		hold_locks = set()
 		for lockid_node in self.root.findAll(query):
 			for node in lockid_node.getAllParents():
@@ -168,7 +205,7 @@ class LockTree:
 	
 	def getAllLocksBelow(self,lock_id):
 		""" returns set of all locks for which the given lock is acquired at some time"""
-		query = Node(lock_id)
+		query = lock_id
 		descendant_locks = set()
 		for lockid_node in self.root.findAll(query):
 			for descendant in lockid_node.getAllChildrenBFS_G():
@@ -176,7 +213,7 @@ class LockTree:
 		return descendant_locks - set([lock_id])
 
 	def printTree(self):
-		print(self.root.printNode())
+		print(self.root.printSubTree())
 
 forrest = LockForrest()
 
