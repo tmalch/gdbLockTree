@@ -7,7 +7,10 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(basedir)
 print(sys.path)
 import gdbLockTree.LockInterface as LockInterface
-import gdbLockTree.LockTreeAlgo as LockTreeAlgo
+import gdbLockTree.LockTree as LockTreeAlgo
+import gdbLockTree.commands.DeadlockDetection as DeadlockDetection
+import gdbLockTree.commands.PrintandStuff as PrintandStuff
+import gdbLockTree.commands.TreeView as TreeView
 
 class MyBreakpoint(gdb.Breakpoint):
 	def __init__ (self,plugin):
@@ -17,30 +20,46 @@ class MyBreakpoint(gdb.Breakpoint):
 		self.plugin.handleStopEvent()
 		return False #don't stop
 
-
 class LockTreeCommand(gdb.Command):
 	"""Greet the whole world."""
 	registery = {}
 	pluginlocation = basedir+"/gdbLockTree/plugins/"
 	
 	def registerPlugin(name,plugin):		
-		print("register new plugin "+name)
+		""" gets called by each BreakPoint Plugin that gets  imported
+				name: is the name of the plugin (eg qmutex). one plugin has normally more than one Breakpoint objects (eg one for acquire one for release)
+				plugin: the Breakpoint object"""
+		if plugin.interfaceType() != LockInterface.type:
+			print("Don't know what to do with plugin "+name+" of type "+plugin.interfaceType())
+			return
 		if name not in LockTreeCommand.registery:
+			print("register new plugin "+name)
 			LockTreeCommand.registery[name] = [plugin,]
 		else:
 			LockTreeCommand.registery[name].append(plugin)
+
+	def importPluginFiles(self):
+		"""imports all .py files inside the plugin directory 
+			prior importing it sets the methods the plugins will use for communication with the application"""
+		LockInterface.acquire = LockTreeAlgo.acquire
+		LockInterface.release = LockTreeAlgo.release
+		LockInterface.register = LockTreeCommand.registerPlugin
+		plugin_files = filter(lambda x: x.endswith('.py') and x != '__init__.py', os.listdir(LockTreeCommand.pluginlocation))
+		for file in plugin_files:
+			__import__("gdbLockTree.plugins."+file[:-3])			
+			print("import pluginFile "+file)
 			
 	def __init__ (self):
 		super (LockTreeCommand, self).__init__ ("locktree", gdb.COMMAND_USER)
 		self.dont_repeat()
 		self.breakpoints = []
-		self.subCommands = {"addplugin":self.registerNewPlugin, #register a new lockDescription plugin
-												"plugins":self.printPlugins,
-												"monitore":self.createBreakpoints,# create Breakpoints for all stated lockDescriptions given in a space seperated list
-												"stop":self.deleteBreakpoints,# delete all Breakpoints set by LockTree
-												"check":self.check, # Run the Deadlock Detection
-												"printthreads":self.printThreads,# print the current list of ThreadIDs that have acquired a lock
-												"printtree":self.printTree,# print the current locktree for the given ThreadID
+		self.subCommands = {		"plugins":self.printPlugins,
+									"monitore":self.createBreakpoints,# create Breakpoints for all stated lockDescriptions given in a space seperated list
+									"stop":self.deleteBreakpoints,# delete all Breakpoints set by LockTree
+									"check":self.check, # Run the Deadlock Detection
+									"printthreads":self.printThreads,# print the current list of ThreadIDs that have acquired a lock
+									"printtree":self.printTree,# print the current locktree for the given ThreadID
+									"printdot":self.printTreeGui,
 													 }
 		self.importPluginFiles()
 	def invoke (self, arg, from_tty):
@@ -49,22 +68,10 @@ class LockTreeCommand(gdb.Command):
 			command = argv[0].lower()
 			self.subCommands[command](argv)
 		except Exception as e:
-			print("ERROR "+str(e))
+			print("ERROR "+format(e))
 			for command in self.subCommands.keys():
 				print(command)
-	def importPluginFiles(self):
-		print(LockTreeCommand.pluginlocation)
-		LockInterface.acquire = LockTreeAlgo.acquire
-		LockInterface.release = LockTreeAlgo.release
-		LockInterface.register = LockTreeCommand.registerPlugin
-		plugin_files = filter(lambda x: x.endswith('.py') and x != '__init__.py', os.listdir(LockTreeCommand.pluginlocation))
-		for file in plugin_files:
-			__import__("gdbLockTree.plugins."+file[:-3])
-			print("import pluginFile "+file)
 
-	def registerNewPlugin(self,argv):
-		""" add a plugin from another place than the plugins directory"""
-		pass
 		
 	def printPlugins(self,argv):
 		for ltype in LockTreeCommand.registery.keys():
@@ -89,19 +96,24 @@ class LockTreeCommand(gdb.Command):
 		self.breakpoints = []
 
 	def check(self,argv):
-		"""Run the Deadlock Detection"""
-		LockTreeAlgo.forrest.check()
-
+		LockTreeAlgo.forrest.executeCommand(DeadlockDetection.check)
+		
 	def printThreads(self,argv):
-		"""print the current list of ThreadIDs that have acquired a lock"""
-		for x in LockTreeAlgo.forrest.getThreadList():
-			print(x)
+		threads = LockTreeAlgo.forrest.executeCommand(PrintandStuff.printThreads)
+		", ".join(threads)
 
 	def printTree(self,argv):
 		""" print the current locktree for the given ThreadID"""
-		if len(argv) > 1:
-			LockTreeAlgo.forrest.printTree(LockTreeAlgo.Thread(int(argv[1])))
-			
+		for arg in argv[1:]:
+			thread = LockTreeAlgo.Thread(int(arg))
+			LockTreeAlgo.forrest.executeCommand(PrintandStuff.printTree,(thread))
+	
+	def printTreeGui(self,argv):
+		""" print the current locktree for all given ThreadIDs with graphviz"""
+		for arg in argv[1:]:
+			thread = LockTreeAlgo.Thread(int(arg))
+			LockTreeAlgo.forrest.executeCommand(TreeView.generateDotCode,kwargs={"thread":thread})
+
 
 LockTreeCommand()
 

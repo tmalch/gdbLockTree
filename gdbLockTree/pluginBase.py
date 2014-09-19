@@ -10,6 +10,8 @@ class PluginBase():
 		return self.location
 	def interfaceType(self):
 		return self.interface.type
+	def name(self):
+		return self.name
 	def handleStopEvent(self):	
 		pass
 
