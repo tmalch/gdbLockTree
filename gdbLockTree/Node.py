@@ -26,7 +26,7 @@ class Node:
         
 # Methods operating on the SubTree
     def subTreeSize(self):
-        return len([0 for i in self.getAllChildrenDFS_G()])
+        return len([0 for _ in self.getDescendantsDFS_G()])
     def printSubTree(self,prefix=""):
         """ returns string representation of the subTree starting in self"""
         res = prefix+"|--"+str(self.value)+"\n"
@@ -34,11 +34,30 @@ class Node:
             res += n.printSubTree(prefix=prefix+"|  ")
         return res
    
-    def getAllChildrenBFS_G(self):
+    def getDescendantsBFS_G(self):
         """ a Generator that returns all children of this node in BFS order
                 this node as first"""  
-        yield from self.filterSubtreeBFS(lambda n: True)  
-            
+        queue = deque([self])
+        while len(queue) > 0:
+            n = queue.popleft()
+            yield n
+            queue.extend(n.children)
+
+    def getDescendantsList(self):
+        """returns a list of all descendants of this node in BFS order
+            this node as first"""  
+        l = list()
+        l.append(self)
+        i=0
+        try:
+            while True:
+                n = l[i]
+                l.extend(n.children)
+                i=i+1
+        except IndexError:
+            return l
+        
+                        
     def filterSubtreeBFS(self,query):
         queue = deque([self])
         while len(queue) > 0:
@@ -52,37 +71,37 @@ class Node:
             yield self
         for child in self.children:
             yield from child.filterSubtreeDFS(query)
+    
+    filterSubTree = filterSubtreeDFS
 
     def mapSubtree(self,function): 
         yield function(self)
         for child in self.children:
             yield from child.mapSubtree(function) 
     
-        
-    def getAllChildrenDFS_G(self):
+    def getDescendantsDFS_G(self):
         """ a Generator that returns all children of this node in DFS order
                 this node as first"""    
-        yield from self.filterSubtreeDFS(lambda n: True)
+        yield self
+        for child in self.children:
+            yield from child.getDescendantsDFS_G()
 
-    getAllChildren = getAllChildrenDFS_G
+    getDescendants = getDescendantsBFS_G
+    getAllChildren = getDescendants
 
-    def find(self,query,order = getAllChildrenBFS_G):
+    def find(self,query,order = getDescendants):
         """find the node of first occurrences of value 'query'; Breadth First Search """
         for node in order(self):
             if node.value == query:
                 return node
         
-    def findAll(self,query,order = getAllChildrenBFS_G):
+    def findAll(self,query):
         """find all Nodes in which the value 'query' occurs; Breadth First Search """
         occurrences = []
-        for node in order(self):
+        for node in self.getDescendantsList():
             if node.value == query:
                 occurrences.append(node)
         return occurrences
-
-    def getAllParents(self):
-        """returns list of all parents of this node up to the Root element"""
-        return [node for node in self.getAllParents_G() ]
 
     def getAllParents_G(self):
         """a Generator which returns all parents of this node up to (including) the Root element
@@ -90,12 +109,14 @@ class Node:
         yield self
         if not self.isRoot():
             yield from self.parent.getAllParents_G()
+    
+    getAllParents = getAllParents_G
 
     def branch_G(self):
         """ returns all branches of the subtree rooted in this node as lists"""
         branch = []
         prev_branch = []
-        for n in self.getAllChildrenDFS_G():
+        for n in self.getDescendantsDFS_G():
             if n.parent in prev_branch:
                 branch = prev_branch[:prev_branch.index(n.parent)+1]
             branch.append(n)
