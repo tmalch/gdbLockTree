@@ -1,11 +1,14 @@
 import random
 from ..LockTree import LockNode
 
-def randomTree(size,valrange=(1,100)):
+
+def randomTree(size,valrange=(1,100),root=None):
     values = [ random.randint(valrange[0],valrange[1]) for _ in range(size)]
-    root = LockNode(values[0])
+    if root is None:
+        root = LockNode(values[0])
+        values = values[1:]
     nodelist = [root]
-    for lid in values[1:]:
+    for lid in values:
         rnd_parent = random.choice(nodelist)
         new_node = LockNode(lid)
         rnd_parent.addChild(new_node)

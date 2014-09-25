@@ -10,7 +10,7 @@ def uselessLocks(trees):
     """ reports all Locks that are only acquired in a single thread as a list of Lock obj"""
     counted_locks = dict()
     for tree in trees:
-        lockset = set([n.value for n in tree.getAllChildren() if isinstance(n, LockNode)]) #so that a lock is counted only once if it occurs multiple times in a Locktree
+        lockset = set([n.value for n in tree.getDescendants() if isinstance(n, LockNode)]) #so that a lock is counted only once if it occurs multiple times in a Locktree
         for lid in lockset:
                 counted_locks[lid] = counted_locks.get(lid,0) + 1
     

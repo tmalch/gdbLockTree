@@ -1,5 +1,5 @@
 import unittest
-from gdbLockTree.commands import PrintandStuff
+from ..commands import PrintandStuff
 from ..LockTree import ThreadNode
 import random
 from . import Utils

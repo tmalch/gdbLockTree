@@ -19,7 +19,7 @@ class LockNode(Node):
 	def addCallLoc(self,call_loc):
 		if call_loc is not None:
 			self.attributes['callLocations'].update(call_loc)
-	
+
 class ThreadNode(Node): 
 	"""  represents lockTree of one Thread"""
 	def __init__ (self,thread):
