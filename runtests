@@ -1,11 +1,17 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -m gdbLockTree.tests
 
 import unittest
-import gdbLockTree.tests.LockTreeTests as LockTreeTests
+import gdbLockTree.tests.AcquireRelease as AcquireRelease
 import gdbLockTree.tests.TreeTests as TreeTests
+import gdbLockTree.tests.CommandPrintandStuff as PrintandStuff
+import gdbLockTree.tests.CommandTreeView as TreeView
 
-suite1 = unittest.TestLoader().loadTestsFromTestCase(LockTreeTests.BasicLockTreeTests)
+suite1 = unittest.TestLoader().loadTestsFromTestCase(AcquireRelease.BasicLockTreeTests)
 suite2 = unittest.TestLoader().loadTestsFromTestCase(TreeTests.BasicTreeTests)
+suite3 = unittest.TestLoader().loadTestsFromTestCase(PrintandStuff.PrintTests)
+suite4 = unittest.TestLoader().loadTestsFromTestCase(TreeView.GraphvizTests)
 
 unittest.TextTestRunner(verbosity=2).run(suite1)
 unittest.TextTestRunner(verbosity=2).run(suite2)
+unittest.TextTestRunner(verbosity=2).run(suite3)
+unittest.TextTestRunner(verbosity=2).run(suite4)

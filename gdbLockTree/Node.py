@@ -108,6 +108,9 @@ class Node:
         yield self
         if not self.isRoot():
             yield from self.parent.getAllParents_G()
+    
+        
+    getAllParents = getAllParents_G
 
     def getAncestorList(self):
         """a Generator which returns all parents of this node up to (including) the Root element

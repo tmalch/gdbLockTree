@@ -2,6 +2,7 @@ import random
 import unittest
 
 from ..Node import Node
+from . import Utils
 
 class BasicTreeTests(unittest.TestCase):
 		def setUp(self):
@@ -67,16 +68,16 @@ class BasicTreeTests(unittest.TestCase):
 			root = Node(0)
 			n = Node(11)
 			root.addChild(n)
-			p = n.getAllParents()
+			p = list(n.getAllParents())
 			
 			self.assertIs(n,p[0])
 			self.assertIs(root,p[1])
 			
-			cb =  [x for x in root.getAllChildrenBFS_G()]
+			cb =  [x for x in root.getDescendantsBFS_G()]
 			self.assertEqual(len(cb),2)
 			self.assertIs(root,cb[0])
 			self.assertIs(n,cb[1])
-			cd =  [x for x in root.getAllChildrenDFS_G()]
+			cd =  [x for x in root.getDescendantsDFS_G()]
 			self.assertEqual(len(cd),2)
 			self.assertIs(root,cd[0])
 			self.assertIs(n,cd[1])
@@ -90,19 +91,19 @@ class BasicTreeTests(unittest.TestCase):
 			root.addChild(l1_1)
 			l1_0.addChild(l2)
 			
-			p = l2.getAllParents()
+			p = list(l2.getAllParents_G())
 			self.assertEqual(len(p),3)
 			self.assertIs(l2,p[0])
 			self.assertIs(l1_0,p[1])
 			self.assertIs(root,p[2])
 			
-			cb =  [x for x in root.getAllChildrenBFS_G()]
+			cb =  [x for x in root.getDescendantsBFS_G()]
 			self.assertIs(root,cb[0])
 			self.assertIs(l1_0,cb[1])
 			self.assertIs(l1_1,cb[2])
 			self.assertIs(l2,cb[3])
 			
-			cd =  [x for x in root.getAllChildrenDFS_G()]
+			cd =  [x for x in root.getDescendantsDFS_G()]
 			self.assertIs(root,cd[0])
 			self.assertIs(l1_0,cd[1])
 			self.assertIs(l2,cd[2])
@@ -127,39 +128,39 @@ class BasicTreeTests(unittest.TestCase):
 			
 			l1_1.addChild(l3_1d)
 			
-			f = root.find(Node(5555),Node.getAllChildrenBFS_G)
+			f = root.find(Node(5555),Node.getDescendantsBFS_G)
 			self.assertEqual(f,None)
-			f = root.find(Node(5555),Node.getAllChildrenDFS_G)
-			self.assertEqual(f,None)
-			
-			f = root.findAll(Node(5555),Node.getAllChildrenBFS_G)
-			self.assertEqual(len(f),0)
-			self.assertEqual(f,[])
-			f = root.findAll(Node(5555),Node.getAllChildrenDFS_G)
-			self.assertEqual(len(f),0)
-			self.assertEqual(f,[])
-			
-			f = root.find(None,Node.getAllChildrenBFS_G)
-			self.assertEqual(f,None)
-			f = root.find(None,Node.getAllChildrenDFS_G)
+			f = root.find(Node(5555),Node.getDescendantsDFS_G)
 			self.assertEqual(f,None)
 			
-			f = root.findAll(None,Node.getAllChildrenBFS_G)
+			f = root.findAll(Node(5555),Node.getDescendantsBFS_G)
 			self.assertEqual(len(f),0)
 			self.assertEqual(f,[])
-			f = root.findAll(None,Node.getAllChildrenDFS_G)
+			f = root.findAll(Node(5555),Node.getDescendantsDFS_G)
 			self.assertEqual(len(f),0)
 			self.assertEqual(f,[])
 			
-			f = root.find(9,Node.getAllChildrenBFS_G)
+			f = root.find(None,Node.getDescendantsBFS_G)
 			self.assertEqual(f,None)
-			f = root.find(9,Node.getAllChildrenDFS_G)
+			f = root.find(None,Node.getDescendantsDFS_G)
 			self.assertEqual(f,None)
 			
-			f = root.findAll(9,Node.getAllChildrenBFS_G)
+			f = root.findAll(None,Node.getDescendantsBFS_G)
 			self.assertEqual(len(f),0)
 			self.assertEqual(f,[])
-			f = root.findAll(9,Node.getAllChildrenDFS_G)
+			f = root.findAll(None,Node.getDescendantsDFS_G)
+			self.assertEqual(len(f),0)
+			self.assertEqual(f,[])
+			
+			f = root.find(9,Node.getDescendantsBFS_G)
+			self.assertEqual(f,None)
+			f = root.find(9,Node.getDescendantsDFS_G)
+			self.assertEqual(f,None)
+			
+			f = root.findAll(9,Node.getDescendantsBFS_G)
+			self.assertEqual(len(f),0)
+			self.assertEqual(f,[])
+			f = root.findAll(9,Node.getDescendantsDFS_G)
 			self.assertEqual(len(f),0)
 			self.assertEqual(f,[])
 			
@@ -167,44 +168,44 @@ class BasicTreeTests(unittest.TestCase):
 			size = 15
 			root, val,dval = self.buildRandomTree(size)
 			self.assertEqual(len(val),size)
-			self.assertEqual(len([x for x in root.getAllChildrenBFS_G()]),size)
-			self.assertEqual(len([x for x in root.getAllChildrenDFS_G()]),size)
+			self.assertEqual(len([x for x in root.getDescendantsBFS_G()]),size)
+			self.assertEqual(len([x for x in root.getDescendantsDFS_G()]),size)
 			
 			elem = random.choice(val)
-			self.assertEqual(len(root.findAll(elem,Node.getAllChildrenDFS_G)),val.count(elem))
+			self.assertEqual(len(root.findAll(elem,Node.getDescendantsDFS_G)),val.count(elem))
 			elem = random.choice(val)
-			self.assertEqual(len(root.findAll(elem,Node.getAllChildrenBFS_G)),val.count(elem))
+			self.assertEqual(len(root.findAll(elem,Node.getDescendantsBFS_G)),val.count(elem))
 		
 		def test_TreeBasic11(self):
 			size = 100
 			root, val, dval = self.buildRandomTree(size)
 			self.assertEqual(len(val),size)
-			self.assertEqual(len([x for x in root.getAllChildrenBFS_G()]),size)
-			self.assertEqual(len([x for x in root.getAllChildrenDFS_G()]),size)
+			self.assertEqual(len([x for x in root.getDescendantsBFS_G()]),size)
+			self.assertEqual(len([x for x in root.getDescendantsDFS_G()]),size)
 						
 			elem = random.choice(val)
-			f = root.find(elem,Node.getAllChildrenDFS_G)
+			f = root.find(elem,Node.getDescendantsDFS_G)
 			self.assertEqual(f.value,elem)
-			f = root.find(elem,Node.getAllChildrenBFS_G)
+			f = root.find(elem,Node.getDescendantsBFS_G)
 			self.assertEqual(f.value,elem)
 			
 			elem = random.choice(val)
-			oc = root.findAll(elem,Node.getAllChildrenDFS_G)
+			oc = root.findAll(elem,Node.getDescendantsDFS_G)
 			self.assertEqual(len(oc),val.count(elem))
 			self.assertEqual(oc[0].value,elem)
 			elem = random.choice(val)
-			oc = root.findAll(elem,Node.getAllChildrenBFS_G)
+			oc = root.findAll(elem,Node.getDescendantsBFS_G)
 			self.assertEqual(len(oc),val.count(elem))
 			self.assertEqual(oc[0].value,elem)
 			
 			elem = random.choice(dval)
-			oc = root.findAll(elem,Node.getAllChildrenBFS_G)
+			oc = root.findAll(elem,Node.getDescendantsBFS_G)
 			self.assertEqual(len(oc),val.count(elem))
 			self.assertEqual(oc[0].value,elem)
 			self.assertEqual(oc[1].value,elem)			
 			
 			elem = random.choice(dval)
-			oc = root.findAll(elem,Node.getAllChildrenDFS_G)
+			oc = root.findAll(elem,Node.getDescendantsDFS_G)
 			self.assertEqual(len(oc),val.count(elem))
 			self.assertEqual(oc[0].value,elem)
 			self.assertEqual(oc[1].value,elem)
@@ -242,17 +243,17 @@ class BasicTreeTests(unittest.TestCase):
 			f = root.find(None)
 			self.assertEqual(f,None)
 			
-			f = root.find(31,Node.getAllChildrenDFS_G)
+			f = root.find(31,Node.getDescendantsDFS_G)
 			self.assertIs(l3_1,f)
 			self.assertEqual(f.value,31)
-			f = root.find(31,Node.getAllChildrenBFS_G)
+			f = root.find(31,Node.getDescendantsBFS_G)
 			self.assertIs(l3_1d,f)
 			self.assertEqual(f.value,31)
 			
 			f = root.findAll(31)
 			self.assertEqual(len(f),2)
 			
-			p = l3_1.getAllParents()
+			p = list(l3_1.getAllParents())
 			self.assertEqual(len(p),4)
 			self.assertIs(p[0],l3_1)
 			self.assertIs(p[1],l2_1)
@@ -286,17 +287,17 @@ class BasicTreeTests(unittest.TestCase):
 			self.assertIs(l3_0,f)
 			self.assertEqual(f.value,30)
 			
-			f = root.find(31,Node.getAllChildrenDFS_G)
+			f = root.find(31,Node.getDescendantsDFS_G)
 			self.assertIs(l3_1,f)
 			self.assertEqual(f.value,31)
-			f = root.find(31,Node.getAllChildrenBFS_G)
+			f = root.find(31,Node.getDescendantsBFS_G)
 			self.assertIs(l3_1d,f)
 			self.assertEqual(f.value,31)
 			
 			f = root.findAll(31)
 			self.assertEqual(len(f),2)
 			
-			p = l3_1.getAllParents()
+			p = list(l3_1.getAllParents())
 			self.assertEqual(len(p),4)
 			self.assertIs(p[0],l3_1)
 			self.assertIs(p[1],l2_1)
@@ -408,6 +409,30 @@ class BasicTreeTests(unittest.TestCase):
 			self.assertIn(b2, branches)
 			self.assertIn(b3, branches)
 			self.assertTrue(len(branches) == 4)
+		def test_clone1(self):
+			tree = Node(0)
+			newtree = Utils.cloneTree(tree)
+			nodelist1 = [n for n in tree.getDescendants()]
+			nodelist2 = [n for n in newtree.getDescendants()]
+			for i, j in zip(nodelist1, nodelist2):
+				if i.value != j.value:
+					self.assertTrue(False)
+		def test_clone2(self):
+			(tree,_) = Utils.randomTree(30)
+			newtree = Utils.cloneTree(tree)
+			nodelist1 = [n for n in tree.getDescendants()]
+			nodelist2 = [n for n in newtree.getDescendants()]
+			for i, j in zip(nodelist1, nodelist2):
+				if i.value != j.value:
+					self.assertTrue(False)
+		def test_clone3(self):
+			(tree,_) = Utils.randomTree(100)
+			newtree = Utils.cloneTree(tree)
+			nodelist1 = [n for n in tree.getDescendants()]
+			nodelist2 = [n for n in newtree.getDescendants()]
+			for i, j in zip(nodelist1, nodelist2):
+				if i.value != j.value:
+					self.assertTrue(False)
 		def buildRandomTree(self,size):
 			s2 = int(size/10)
 			s1 = size - s2*2

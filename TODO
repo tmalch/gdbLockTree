@@ -8,5 +8,11 @@ TODO
 	LockTrees als Grafiken anzeigen (pyQt)
 	possible Deadlocks besser aufbereiten
 
+
+*jedes plugin verwendet ein Interface (zb LockInterface), Hauptprogramm weiß beim importen eines plugins noch nicht wofür es zu verwenden ist, kann den typ des Interfaces aber vom plugin abfragen
+*commands in LockTreeCommand einbauen
+*Tests für einzelne commands schreiben
+
 *analysieren welche weiteren Hilfestelungen dem Benutzer gegeben werden könnten 
 *thread segments implementieren
+
