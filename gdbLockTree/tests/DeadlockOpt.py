@@ -17,10 +17,10 @@ import pstats
         
 class DeadLockTests(unittest.TestCase):
     def setUp(self):
-        random.seed(6789)
+        random.seed()
         self.trees = [ThreadNode(tid) for tid in range(20) ]
         for tree in self.trees:
-            (root,_) = Utils.randomTree(100)
+            (root,_) = Utils.randomTree(200)
             for n in root.children:
                 tree.addChild(n)
         self.pr = cProfile.Profile()
@@ -33,15 +33,15 @@ class DeadLockTests(unittest.TestCase):
 
     def test_time1(self):
         """ many large trees """
-        print("*********DeadlockDetection3**************")
-        res = Optimized1.check(self.trees)
-        res = Optimized1.check(self.trees)
+        print("*********DeadlockDetection2**************")
+        res = PaperImpl.check(self.trees)
+
 
     def test_time2(self):
         """ many large trees """
         print("*********DeadlockDetection4**************")
         res = Optimized2.check(self.trees)
-        res = Optimized2.check(self.trees)
+
 
     def test_conformance(self):
         #self.pr.disable()
@@ -54,6 +54,7 @@ class DeadLockTests(unittest.TestCase):
         base = [str(d) for d in BaseLine.check(self.trees)]
         res2 = [str(d) for d in Optimized1.check(self.trees)]
         res3 = [str(d) for d in Optimized2.check(self.trees)]
+        
 
         self.assertCountEqual(base, res2)
         self.assertCountEqual(base, res3)

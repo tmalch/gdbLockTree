@@ -1,5 +1,5 @@
 from ..Utils import DeadLock
-from gdbLockTree.LockTree import ThreadNode
+from gdbLockTree.LockTree import LockNode
 
 
 Above = dict()
@@ -11,12 +11,12 @@ def check(trees):
     Above = dict()
     Below = dict()
     deadLocks = list()
+    generateLockMaps(trees)
     for t1 in trees:
         for t2 in trees:
             if t1 != t2:
                 deadLocks.extend(checkTreePair(t1,t2))
     return deadLocks
-
 
 def checkTreePair(tree1,tree2): # http://ti.arc.nasa.gov/m/pub-archive/archive/0177.pdf
     deadlist = list()
@@ -35,7 +35,10 @@ def checkO(node1,below_node1,node2,tree1,tree2):
         return DeadLock((tree1.value,tree2.value),(node1,node1_),(node2,node2_))
 def analyzeThis(tree1,node1,tree2):
     deadlist = list()
-    N = [n for n in tree2.findAll(node1.value) if notBelowMark(n)]
+    if node1.value not in tree2.attributes["map"]:
+        return []
+    found = tree2.attributes["map"][node1.value]
+    N = [n for n in found if notBelowMark(n)]
     below_node1 = getBelow(node1)
     for node2 in N:
         deadlock = checkO(node1,below_node1,node2,tree1,tree2)
@@ -82,7 +85,17 @@ def getAbove(node):
         Above[node] = l
         return l
 
-
+def generateLockMaps(trees):
+    for tree in trees:
+        d = dict()
+        for node in tree.getDescendantsList():
+            if not isinstance(node, LockNode):
+                continue
+            if node.value in d:
+                d[node.value].append(node)
+            else:
+                d[node.value] = [node,]
+        tree.attributes["map"] = d
 
 
 

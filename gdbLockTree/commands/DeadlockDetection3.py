@@ -15,13 +15,13 @@ def check(trees):
     global Above,Below
     Above = dict()
     Below = dict()
+    generateLockMaps(trees)
     deadLocks = list()
     for t1 in trees:
         for t2 in trees:
             if t1 != t2:
                 deadLocks.extend(checkTreePair(t1,t2))
     return deadLocks
-
 
 
 def checkTreePair(tree1,tree2):
@@ -32,7 +32,9 @@ def checkTreePair(tree1,tree2):
             continue
         t1below_node = getBelow(node1)
         t1above_node = getAbove(node1)
-        for node2 in tree2.findAll(node1.value):
+        if node1.value not in tree2.attributes["map"]:
+            continue
+        for node2 in tree2.attributes["map"][node1.value]:
             t2above_node = getAbove(node2)
             (t1gatelocks,t2gatelocks) = __intersect(t1above_node, t2above_node)
             if len(t1gatelocks) == 0:
@@ -52,6 +54,18 @@ def __intersect(nodeset1,nodeset2):
                 intersection1.append(node1)
                 intersection2.append(node2)
     return (set(intersection1),set(intersection2))
+
+def generateLockMaps(trees):
+    for tree in trees:
+        d = dict()
+        for node in tree.getDescendantsList():
+            if not isinstance(node, LockNode):
+                continue
+            if node.value in d:
+                d[node.value].append(node)
+            else:
+                d[node.value] = [node,]
+        tree.attributes["map"] = d
 
 def getBelow(node):
     if node in Below:
