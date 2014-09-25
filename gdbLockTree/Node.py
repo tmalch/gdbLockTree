@@ -56,8 +56,7 @@ class Node:
                 i=i+1
         except IndexError:
             return l
-        
-                        
+                                
     def filterSubtreeBFS(self,query):
         queue = deque([self])
         while len(queue) > 0:
@@ -109,7 +108,16 @@ class Node:
         yield self
         if not self.isRoot():
             yield from self.parent.getAllParents_G()
+
+    def getAncestorList(self):
+        """a Generator which returns all parents of this node up to (including) the Root element
+                this node as first"""
+        l = [self,]
+        if not self.isRoot():
+            l.extend(self.parent.getAncestorList())
+        return l
     
+        
     getAllParents = getAllParents_G
 
     def branch_G(self):

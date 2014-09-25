@@ -79,27 +79,6 @@ class DeadLockTests(unittest.TestCase):
         print("test_trees4 duration: "+str(end-start))
 
 
-    def test_time1(self):
-        """ many large trees """
-        import cProfile
-        import pstats
-        random.seed(567357)
-        trees = [ThreadNode(tid) for tid in range(20) ]
-        for tree in trees:
-            (root,_) = Utils.randomTree(150)
-            for n in root.children:
-                tree.addChild(n)
-        pr = cProfile.Profile()
-        pr.enable()
-        start = time.process_time()
-        res = DeadlockDetection.check(trees)
-        end = time.process_time()
-        print("test_time1 duration: "+str(end-start))
-        p = pstats.Stats(pr)
-        p.strip_dirs()
-        p.sort_stats ('cumtime')
-        p.print_stats ()
-
     def test_deadlock(self):
         random.seed(123)
         trees = [ThreadNode(0),ThreadNode(1)]
