@@ -50,9 +50,37 @@ class DeadLock:
         involvednodes_thread1 = involvednodes_thread1+ " "+str([str(n) for n in self.involvednodes_thread1[1]])
         involvednodes_thread2 = str(self.involvednodes_thread2[0]) + " "+str([str(n) for n in self.involvednodes_thread2[1]])
         return "between "+str(self.involvedthreads[0])+" and "+str(self.involvedthreads[1])+" ::\n "+involvednodes_thread1+"\n"+involvednodes_thread2
-    def __hash__(self):
-        pass
     def __eq__(self, other):
         pass
+        if other == None:
+            return False 
+        if type(other) != DeadLock:
+            return False
+        if self.involvedthreads[0] not in other.involvedthreads or self.involvedthreads[1] not in other.involvedthreads:
+            return False
+
+        lockset = set([self.involvednodes_thread1[0].value])
+        lockset.update([n.value for n in self.involvednodes_thread1[1]])
+        lockset.update([self.involvednodes_thread2[0].value])
+        lockset.update([n.value for n in self.involvednodes_thread2[1]])
+
+        olockset = set([other.involvednodes_thread1[0].value])
+        olockset.update([n.value for n in other.involvednodes_thread1[1]])
+        olockset.update([other.involvednodes_thread2[0].value])
+        olockset.update([n.value for n in other.involvednodes_thread2[1]])
+        
+        return (lockset ^ olockset) == set()
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
