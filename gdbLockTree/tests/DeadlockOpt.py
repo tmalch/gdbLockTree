@@ -7,9 +7,8 @@ import random
 import time
 from ..Utils import DeadLock
 
-from ..commands import DeadlockDetection as BaseLine
+from ..commands import DeadlockDetection as Base
 from ..commands import DeadlockDetection2 as PaperImpl
-from ..commands import DeadlockDetection3 as Optimized1
 from ..commands import DeadlockDetection4 as Optimized2
 
 import cProfile
@@ -18,9 +17,9 @@ import pstats
 class DeadLockTests(unittest.TestCase):
     def setUp(self):
         random.seed()
-        self.trees = [ThreadNode(tid) for tid in range(20) ]
+        self.trees = [ThreadNode(tid) for tid in range(10) ]
         for tree in self.trees:
-            (root,_) = Utils.randomTree(200)
+            (root,_) = Utils.randomTree(100)
             for n in root.children:
                 tree.addChild(n)
         self.pr = cProfile.Profile()
@@ -44,20 +43,49 @@ class DeadLockTests(unittest.TestCase):
 
 
     def test_conformance(self):
-        #self.pr.disable()
+        self.pr.disable()
         random.seed(123)
         trees = [ThreadNode(0),ThreadNode(1)]
-        (ltree,ltree2,introduced_deadlocks) = createDeadlockedPair(10,2)
+        (ltree,ltree2,introduced_deadlocks) = createDeadlockedPair(15,3)
         trees[0].addChild(ltree)
         trees[1].addChild(ltree2)
 
-        base = [str(d) for d in BaseLine.check(self.trees)]
-        res2 = [str(d) for d in Optimized1.check(self.trees)]
-        res3 = [str(d) for d in Optimized2.check(self.trees)]
-        
+        res2 = PaperImpl.check(self.trees)
+        res3 = Optimized2.check(self.trees)
+        res = []
+        for d in res2:
+            if d not in res:
+                res.append(d)
+        res2_d = res        
+        res = []
+        for d in res3:
+            if d not in res:
+                res.append(d)
+        res3_d = res
+        str_res2 = [str(d) for d in res2]
+        str_res3 = [str(d) for d in res3]
+        str_res2_d = [str(d) for d in res2_d]
+        str_res3_d = [str(d) for d in res3_d]
+        with open("paper.txt", "w") as file:
+            for r in str_res2:
+                file.write(r+"\n")
+            file.write("----------------------\n")
+            for r in str_res2_d:
+                file.write(r+"\n")
+            for tree in self.trees:
+                file.write(tree.printSubTree())
 
-        self.assertCountEqual(base, res2)
-        self.assertCountEqual(base, res3)
+        with open("mine.txt", "w") as file:
+            for r in str_res3:
+                file.write(r+"\n")
+            file.write("----------------------\n")
+            for r in str_res3_d:
+                file.write(r+"\n")
+            for tree in self.trees:
+                file.write(tree.printSubTree())
+        print(str_res3)
+        self.assertCountEqual(str_res3_d, str_res2_d)
+
 
 def gen_randomIndex(length):
     indexes = [i for i in range(0,length-1)]

@@ -35,9 +35,9 @@ def checkO(node1,below_node1,node2,tree1,tree2):
         return DeadLock((tree1.value,tree2.value),(node1,node1_),(node2,node2_))
 def analyzeThis(tree1,node1,tree2):
     deadlist = list()
-    if node1.value not in tree2.attributes["map"]:
-        return []
-    found = tree2.attributes["map"][node1.value]
+    found = []
+    if node1.value in tree2.attributes["map"]:
+        found = tree2.attributes["map"][node1.value]
     N = [n for n in found if notBelowMark(n)]
     below_node1 = getBelow(node1)
     for node2 in N:
