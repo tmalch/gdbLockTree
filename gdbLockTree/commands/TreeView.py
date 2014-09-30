@@ -42,7 +42,7 @@ def NodetoDot(node):
     if node.isRoot():
         return dot_node #+"{rank = source; "+node_id+"}\n"
     parent_node_id = str(id(node.parent))
-    edge = "\""+node_id+"\""+" -- "+"\""+parent_node_id+"\";\n"
+    edge = "\""+parent_node_id+"\""+" -- "+"\""+node_id+"\";\n"
     return dot_node+edge
 
 def generateDotCode(root):
