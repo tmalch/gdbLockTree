@@ -1,10 +1,11 @@
 import random
 import unittest
 
-from gdbLockTree.LockTree import ThreadNode
-from gdbLockTree.LockTree import LockNode
-from gdbLockTree.LockTree import LockForrest
+from ..commands import AcquireRelease
+from ..commands.AcquireRelease import ThreadNode
+from ..commands.AcquireRelease import LockNode
 from gdbLockTree.Utils import Thread
+from gdbLockTree import Utils
 
 class BasicLockTreeTests(unittest.TestCase):
 
@@ -29,39 +30,40 @@ class BasicLockTreeTests(unittest.TestCase):
 			self.root.currentNode = self.root
 			
 		def test_acquire(self):
-			forrest = LockForrest()
 			thread = Thread(555)
-			forrest.acquire(thread,7)
-			forrest.acquire(thread,77)
-			self.assertEqual(forrest.trees[thread].currentNode.value,77)
-			self.assertEqual(forrest.trees[thread].currentNode.parent.value,7)
-			forrest.acquire(thread,None)
-			self.assertEqual(forrest.trees[thread].subTreeSize(),3)
-			forrest.acquire(thread,77)#reentrant
-			self.assertEqual(forrest.trees[thread].subTreeSize(),4)
-			self.assertEqual(forrest.trees[thread].currentNode.value,77)
+			trees = []
+			AcquireRelease.acquire(trees,thread,7)
+			AcquireRelease.acquire(trees,thread,77)
+			throot = Utils.getTreeForThread(trees,thread)
+			self.assertEqual(throot.currentNode.value,77)
+			self.assertEqual(throot.currentNode.parent.value,7)
+			AcquireRelease.acquire(trees,thread,None)
+			self.assertEqual(throot.subTreeSize(),3)
+			AcquireRelease.acquire(trees,thread,77)#reentrant
+			self.assertEqual(throot.subTreeSize(),4)
+			self.assertEqual(throot.currentNode.value,77)
 						
-		def test_release(self):
-			forrest = LockForrest()
-			thread = Thread(555)
-			forrest.release(thread,99)#release never acquired
-			self.assertEqual(forrest.trees[thread].subTreeSize(),1)
-			self.assertEqual(forrest.trees[thread].currentNode.value,thread)
-			forrest.acquire(thread,7)
-			self.assertEqual(forrest.trees[thread].subTreeSize(),2)
-			self.assertEqual(forrest.trees[thread].currentNode.value,7)
-			forrest.release(thread,99)
-			self.assertEqual(forrest.trees[thread].subTreeSize(),2)
-			forrest.release(thread,7)
-			self.assertEqual(forrest.trees[thread].currentNode.value,None)
-			
-			
 		def test_acquirerelease(self):
-			forrest = LockForrest()
+			thread = Thread(555)
+			trees = []
+			AcquireRelease.release(trees,thread,99)#release never acquired
+			throot = Utils.getTreeForThread(trees,thread)
+			self.assertEqual(throot.subTreeSize(),1)
+			self.assertEqual(throot.currentNode.value,thread)
+			AcquireRelease.acquire(trees,thread,7)
+			self.assertEqual(throot.subTreeSize(),2)
+			self.assertEqual(throot.currentNode.value,7)
+			AcquireRelease.release(trees,thread,99)
+			self.assertEqual(throot.subTreeSize(),2)
+			AcquireRelease.release(trees,thread,7)
+			self.assertEqual(throot.currentNode.value,thread)
+			
+			
+		def test_release(self):
 			self.root.currentNode = self.root.find(30)
 			thread = self.root.value
-			forrest.trees[thread] = self.root
-			forrest.release(thread,1)
+			trees = [self.root]
+			AcquireRelease.release(trees,thread,1)
 			self.assertEqual(self.root.subTreeSize(),10)
 			t = self.root.findAll(30)
 			self.assertEqual(len(t),2)

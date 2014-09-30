@@ -1,8 +1,6 @@
-from ..Node import Node
 from ..Utils import Thread
-from ..LockTree import LockNode
+from .AcquireRelease import LockNode
 from ..Utils import DeadLock
-from gdbLockTree.LockTree import ThreadNode
 
 
 

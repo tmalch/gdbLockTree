@@ -1,5 +1,5 @@
 from ..Utils import DeadLock
-from gdbLockTree.LockTree import LockNode
+from .AcquireRelease import LockNode
 
 
 Above = dict()

@@ -1,13 +1,10 @@
-from ..Node import Node
-from ..Utils import Thread
-from ..LockTree import LockNode
+
 from ..Utils import DeadLock
-from gdbLockTree.LockTree import ThreadNode
+from .AcquireRelease import LockNode
 
 
-
-def check(trees):
-    d = DeadlockDetection(trees)
+def check(trees_list):
+    d = DeadlockDetection(trees_list)
     return d.detect()
 
 class DeadlockDetection():
@@ -83,8 +80,8 @@ class DeadlockDetection():
             return l
 
     def intersect(self,nodeset1,nodeset2):
-        """ intersect two sequences by using the function cmp to compare their elements 
-            returns a list with intersecting elements for each of the two sets"""
+        """ intersect two sequences of nodes by their values 
+            returns a list with intersecting nodes for each of the two sets"""
         intersection1 = list()
         intersection2 = list()
         for node1 in nodeset1:

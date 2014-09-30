@@ -1,6 +1,6 @@
 import unittest
-from ..commands import PrintandStuff
-from ..LockTree import ThreadNode
+from gdbLockTree.commands import PrintandStuff
+from gdbLockTree.commands.AcquireRelease import ThreadNode
 import random
 from . import Utils
 
@@ -72,32 +72,25 @@ class PrintTests(unittest.TestCase):
         
     def test_printTree1(self):
         """ no LockNodes"""
-        trees = [ThreadNode(tid) for tid in range(10)]
-        res = PrintandStuff.printTree(trees, random.randint(0,9))
+        res = PrintandStuff.printTree(ThreadNode(random.randint(0,9)))
         print(res)
     def test_printTree2(self):
         """ only one LockNode """
-        trees = [ThreadNode(tid) for tid in range(10)]
+        tree = ThreadNode(6)
         (root,_) = Utils.randomTree(1)
-        trees[6].addChild(root)
-        res = PrintandStuff.printTree(trees, 6)
+        tree.addChild(root)
+        res = PrintandStuff.printTree(tree)
         print(res)
     def test_printTree3(self):
         """ large random tree """
-        trees = [ThreadNode(tid) for tid in range(10)]
+        tree = ThreadNode(6)
         (root,_) = Utils.randomTree(50,(1,25))
-        trees[0].addChild(root)
-        res = PrintandStuff.printTree(trees, 0) 
-        print(res)
-    def test_printTree4(self):
-        """ not existing thread """
-        trees = [ThreadNode(tid) for tid in range(10)]
-        res = PrintandStuff.printTree(trees, 11)
+        tree.addChild(root)
+        res = PrintandStuff.printTree(tree) 
         print(res)
     def test_printTree5(self):
         """ empty tree list """
-        trees = []
-        res = PrintandStuff.printTree(trees, 0)
+        res = PrintandStuff.printTree(None)
         print(res)
         
 

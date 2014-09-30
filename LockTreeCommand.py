@@ -11,6 +11,7 @@ import gdbLockTree.LockTree as LockTreeAlgo
 import gdbLockTree.commands.DeadlockDetection as DeadlockDetection
 import gdbLockTree.commands.PrintandStuff as PrintandStuff
 import gdbLockTree.commands.TreeView as TreeView
+import gdbLockTree.Utils as Utils
 
 class MyBreakpoint(gdb.Breakpoint):
 	def __init__ (self,plugin):
@@ -37,6 +38,10 @@ class LockTreeCommand(gdb.Command):
 			LockTreeCommand.registery[name] = [plugin,]
 		else:
 			LockTreeCommand.registery[name].append(plugin)
+	def exit_handler(event):
+		print("event type: exit")
+		print("exit code: "+str(event.exit_code))
+		LockTreeAlgo.forrest = LockTreeAlgo.LockForrest()
 
 	def importPluginFiles(self):
 		"""imports all .py files inside the plugin directory 
@@ -59,20 +64,21 @@ class LockTreeCommand(gdb.Command):
 									"check":self.check, # Run the Deadlock Detection
 									"printthreads":self.printThreads,# print the current list of ThreadIDs that have acquired a lock
 									"printtree":self.printTree,# print the current locktree for the given ThreadID
-									"printdot":self.printTreeGui,
+									"printgui":self.printTreeGui
 													 }
 		self.importPluginFiles()
+		gdb.events.exited.connect(LockTreeCommand.exit_handler)
+
 	def invoke (self, arg, from_tty):
 		try:
 			argv = gdb.string_to_argv(arg)
 			command = argv[0].lower()
 			self.subCommands[command](argv)
 		except Exception as e:
-			print("ERROR "+format(e))
+			print("ERROR "+str(e))
 			for command in self.subCommands.keys():
 				print(command)
 
-		
 	def printPlugins(self,argv):
 		for ltype in LockTreeCommand.registery.keys():
 			print(ltype)
@@ -96,28 +102,25 @@ class LockTreeCommand(gdb.Command):
 		self.breakpoints = []
 
 	def check(self,argv):
-		LockTreeAlgo.forrest.executeCommand(DeadlockDetection.check)
+		deadlocks = LockTreeAlgo.forrest.executeCommandonForrest(DeadlockDetection.check)
+		for d in deadlocks:
+			print(str(d))
 		
 	def printThreads(self,argv):
-		threads = LockTreeAlgo.forrest.executeCommand(PrintandStuff.printThreads)
-		", ".join(threads)
+		threads = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printThreads)
+		print(", ".join(threads))
 
 	def printTree(self,argv):
 		""" print the current locktree for the given ThreadID"""
 		for arg in argv[1:]:
-			thread = LockTreeAlgo.Thread(int(arg))
-			LockTreeAlgo.forrest.executeCommand(PrintandStuff.printTree,(thread))
+			thread = Utils.Thread(int(arg))
+			LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printTree,thread)
 	
 	def printTreeGui(self,argv):
 		""" print the current locktree for all given ThreadIDs with graphviz"""
 		for arg in argv[1:]:
-			thread = LockTreeAlgo.Thread(int(arg))
-			LockTreeAlgo.forrest.executeCommand(TreeView.generateDotCode,kwargs={"thread":thread})
-
+			thread = Utils.Thread(int(arg))
+			LockTreeAlgo.forrest.executeCommandonTree(TreeView.generateDotCode,thread)
 
 LockTreeCommand()
 
-
-
-#list of all threads existing at the moment
-#gdb.inferiors()[0].threads()

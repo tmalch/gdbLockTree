@@ -40,44 +40,38 @@ class Lock:
 class DeadLock:
     """represents all information about a possible deadlock
         involvednodes: two lists of nodes which locks have triggered the warning
-        involvedthreads: the Threads that are involved, list of Thread objects """
-    def __init__(self,involvedthreads,involvednodes_thread1,involvednodes_thread2):
-        self.involvedthreads = involvedthreads
-        self.involvednodes_thread1 = involvednodes_thread1
-        self.involvednodes_thread2 = involvednodes_thread2
+        threads: the two Threads that are involved, tuple of Thread objects """
+    def __init__(self,involvedthreads,involvednodes_thread0,involvednodes_thread1):
+        assert involvedthreads[0] != involvedthreads[1]
+        assert involvednodes_thread0[0].value == involvednodes_thread1[0].value
+
+        self.threads = (involvedthreads[0],involvedthreads[1])
+        self.locknodes = (involvednodes_thread0[0],involvednodes_thread1[0])
+        self.locknode_sets = (involvednodes_thread0[1],involvednodes_thread1[1])
+
+        self.lock = self.locknodes[0].value
+        lockset0 = frozenset([n.value for n in self.locknode_sets[0]])
+        lockset1 = frozenset([n.value for n in self.locknode_sets[1]])
+        assert lockset0 == lockset1 #both nodesets must have the same locks
+        self.lockset = lockset0
     def __str__(self):
-        involvednodes_thread1 = str(self.involvednodes_thread1[0]) 
-        involvednodes_thread1 = involvednodes_thread1+ " "+str([str(n) for n in self.involvednodes_thread1[1]])
-        involvednodes_thread2 = str(self.involvednodes_thread2[0]) + " "+str([str(n) for n in self.involvednodes_thread2[1]])
-        return "between "+str(self.involvedthreads[0])+" and "+str(self.involvedthreads[1])+" ::\n "+involvednodes_thread1+"\n"+involvednodes_thread2
+        res = "between "+str(self.threads[0])+" and "+str(self.threads[1])+"::"+"\n"
+        res += str(self.lock)+" with "+str([i for i in self.lockset])+"\n"
+        return res
+    def __hash__(self):
+        return hash((self.threads,self.lock,self.lockset) )
     def __eq__(self, other):
-        pass
         if other == None:
             return False 
         if type(other) != DeadLock:
             return False
-        if self.involvedthreads[0] not in other.involvedthreads or self.involvedthreads[1] not in other.involvedthreads:
+        if self.threads[0] not in other.threads or self.threads[1] not in other.threads:
             return False
+        if self.lock != other.lock:
+            return False
+        
+        return (self.lockset == other.lockset)
 
-        lockset = set([self.involvednodes_thread1[0].value])
-        lockset.update([n.value for n in self.involvednodes_thread1[1]])
-        lockset.update([self.involvednodes_thread2[0].value])
-        lockset.update([n.value for n in self.involvednodes_thread2[1]])
-
-        olockset = set([other.involvednodes_thread1[0].value])
-        olockset.update([n.value for n in other.involvednodes_thread1[1]])
-        olockset.update([other.involvednodes_thread2[0].value])
-        olockset.update([n.value for n in other.involvednodes_thread2[1]])
-        
-        return (lockset ^ olockset) == set()
-        
-        
-        
-        
-        
-        
-        
-        
         
         
         

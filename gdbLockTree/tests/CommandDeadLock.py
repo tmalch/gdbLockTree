@@ -1,11 +1,13 @@
 import unittest
-from ..commands import DeadlockDetection
+from gdbLockTree.commands import DeadlockDetectionBase as Base
+from gdbLockTree.commands import DeadlockDetectionPaper as PaperImpl
+from gdbLockTree.commands import DeadlockDetection
+from gdbLockTree.commands.AcquireRelease import ThreadNode 
+
 from . import Utils
-from ..LockTree import ThreadNode
-from ..LockTree import LockNode
+from ..Utils import DeadLock
 import random
 import time
-from ..Utils import DeadLock
 
 class DeadLockTests(unittest.TestCase):
     def test_empty1(self):
@@ -97,6 +99,22 @@ class DeadLockTests(unittest.TestCase):
         for d in res:
             print(d)
 
+    def test_conformance(self):
+        random.seed(123)
+        trees = [ThreadNode(0),ThreadNode(1)]
+        (ltree,ltree2,introduced_deadlocks) = createDeadlockedPair(15,3)
+        trees[0].addChild(ltree)
+        trees[1].addChild(ltree2)
+
+        res2 = PaperImpl.check(trees)
+        res3 = DeadlockDetection.check(trees)
+
+        nodup2 = set(res2)
+        nodup3 = set(res3)
+        diff = nodup2 ^ nodup3 
+        print(str(sorted([str(i) for i in diff])))
+        self.assertCountEqual(nodup2, nodup3)
+
 def gen_randomIndex(length):
     indexes = [i for i in range(0,length-1)]
     ri = random.randint(0,length-1)
@@ -145,7 +163,7 @@ def createDeadlockedPair(size,numdeadlocks=1):
         nodeC_cpy = nodelist_cpy[indexC]
         
         (nodeP_cpy.value,nodeC_cpy.value) = (nodeC.value, nodeP.value)
-        deadlocklist.append(DeadLock((None,None),(nodeP,set([nodeC])),(nodeP_cpy,set([nodeC_cpy]))))
+        deadlocklist.append(DeadLock((0,1),(nodeP,set([nodeC])),(nodeC_cpy,set([nodeP_cpy]))))
         numdeadlocks = numdeadlocks-1
     return (tree,tree_cpy,deadlocklist)
  

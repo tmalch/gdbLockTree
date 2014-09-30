@@ -1,5 +1,5 @@
 import random
-from ..LockTree import LockNode
+from ..commands.AcquireRelease import LockNode
 
 
 def randomTree(size,valrange=(1,100),root=None):

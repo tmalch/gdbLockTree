@@ -9,7 +9,7 @@ import threading
 
 
 def startGraphvizProcess(filename):
-    p = subprocess.Popen(["dot", "-Tx11", filename],
+    p = subprocess.Popen(["dot","-Tx11", filename],
         stderr=subprocess.PIPE,
         shell=False,
         universal_newlines=True
@@ -40,18 +40,15 @@ def NodetoDot(node):
     node_id = str(id(node))
     dot_node = "\""+node_id+"\"[label=\""+label+"\"];\n"
     if node.isRoot():
-        return dot_node
+        return dot_node #+"{rank = source; "+node_id+"}\n"
     parent_node_id = str(id(node.parent))
     edge = "\""+node_id+"\""+" -- "+"\""+parent_node_id+"\";\n"
     return dot_node+edge
 
-def generateDotCode(trees, thread):
+def generateDotCode(root):
     """ print the current locktree for the given ThreadID with graphviz"""
-    root = Utils.getTreeForThread(trees, thread)
     if root is None:
         return
-    
-
     dotCode = "graph G7 { \n node [fontsize=\"8\"];"
     for edge in root.mapSubtree(NodetoDot):
         dotCode += edge

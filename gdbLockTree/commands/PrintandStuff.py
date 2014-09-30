@@ -1,5 +1,5 @@
 
-from ..LockTree import LockNode
+from .AcquireRelease import LockNode
 
 def printThreads(trees):
     """returns list of string representations of all threads that have a lockTree"""
@@ -21,14 +21,13 @@ def uselessLocks(trees):
     return useless_locks
 
 
-def printTree(trees,thread):
-    for th_node in trees:
-        if th_node.value == thread: 
-            return printSubTree(th_node)
-    return "thread does not exist"
+def printTree(tree):
+    return printSubTree(tree)
 
 def printSubTree(node,prefix=""):
     """ returns string representation of the subTree starting in node"""
+    if node is None:
+        return ""
     res = prefix+"|--"+str(node.value)+"\n"
     for n in node.children:
         res += printSubTree(n,prefix=prefix+"|  ")

@@ -1,8 +1,9 @@
 import random
 import unittest
 
-from ..Node import Node
-from . import Utils
+from gdbLockTree.Node import Node
+from gdbLockTree.tests import Utils
+
 
 class BasicTreeTests(unittest.TestCase):
 		def setUp(self):
@@ -133,10 +134,10 @@ class BasicTreeTests(unittest.TestCase):
 			f = root.find(Node(5555),Node.getDescendantsDFS_G)
 			self.assertEqual(f,None)
 			
-			f = root.findAll(Node(5555),Node.getDescendantsBFS_G)
+			f = root.findAll(Node(5555))
 			self.assertEqual(len(f),0)
 			self.assertEqual(f,[])
-			f = root.findAll(Node(5555),Node.getDescendantsDFS_G)
+			f = root.findAll(Node(5555))
 			self.assertEqual(len(f),0)
 			self.assertEqual(f,[])
 			
@@ -145,22 +146,17 @@ class BasicTreeTests(unittest.TestCase):
 			f = root.find(None,Node.getDescendantsDFS_G)
 			self.assertEqual(f,None)
 			
-			f = root.findAll(None,Node.getDescendantsBFS_G)
+			f = root.findAll(None)
 			self.assertEqual(len(f),0)
 			self.assertEqual(f,[])
-			f = root.findAll(None,Node.getDescendantsDFS_G)
-			self.assertEqual(len(f),0)
-			self.assertEqual(f,[])
+
 			
 			f = root.find(9,Node.getDescendantsBFS_G)
 			self.assertEqual(f,None)
 			f = root.find(9,Node.getDescendantsDFS_G)
 			self.assertEqual(f,None)
 			
-			f = root.findAll(9,Node.getDescendantsBFS_G)
-			self.assertEqual(len(f),0)
-			self.assertEqual(f,[])
-			f = root.findAll(9,Node.getDescendantsDFS_G)
+			f = root.findAll(9)
 			self.assertEqual(len(f),0)
 			self.assertEqual(f,[])
 			
@@ -172,9 +168,9 @@ class BasicTreeTests(unittest.TestCase):
 			self.assertEqual(len([x for x in root.getDescendantsDFS_G()]),size)
 			
 			elem = random.choice(val)
-			self.assertEqual(len(root.findAll(elem,Node.getDescendantsDFS_G)),val.count(elem))
+			self.assertEqual(len(root.findAll(elem)),val.count(elem))
 			elem = random.choice(val)
-			self.assertEqual(len(root.findAll(elem,Node.getDescendantsBFS_G)),val.count(elem))
+			self.assertEqual(len(root.findAll(elem)),val.count(elem))
 		
 		def test_TreeBasic11(self):
 			size = 100
@@ -190,22 +186,22 @@ class BasicTreeTests(unittest.TestCase):
 			self.assertEqual(f.value,elem)
 			
 			elem = random.choice(val)
-			oc = root.findAll(elem,Node.getDescendantsDFS_G)
+			oc = root.findAll(elem)
 			self.assertEqual(len(oc),val.count(elem))
 			self.assertEqual(oc[0].value,elem)
 			elem = random.choice(val)
-			oc = root.findAll(elem,Node.getDescendantsBFS_G)
+			oc = root.findAll(elem)
 			self.assertEqual(len(oc),val.count(elem))
 			self.assertEqual(oc[0].value,elem)
 			
 			elem = random.choice(dval)
-			oc = root.findAll(elem,Node.getDescendantsBFS_G)
+			oc = root.findAll(elem)
 			self.assertEqual(len(oc),val.count(elem))
 			self.assertEqual(oc[0].value,elem)
 			self.assertEqual(oc[1].value,elem)			
 			
 			elem = random.choice(dval)
-			oc = root.findAll(elem,Node.getDescendantsDFS_G)
+			oc = root.findAll(elem)
 			self.assertEqual(len(oc),val.count(elem))
 			self.assertEqual(oc[0].value,elem)
 			self.assertEqual(oc[1].value,elem)

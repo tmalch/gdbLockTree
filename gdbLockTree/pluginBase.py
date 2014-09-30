@@ -2,10 +2,10 @@
 
 class PluginBase():
 	def __init__(self,location,name,interface):
-		interface.register(name,self)
 		self.location = location
 		self.name = name
 		self.interface = interface
+		self.interface.register(name,self)
 	def BPlocation(self):
 		return self.location
 	def interfaceType(self):
