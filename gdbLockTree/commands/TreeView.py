@@ -54,6 +54,7 @@ def generateDotCode(root):
         dotCode += edge
     dotCode += "}"
     graphviz_thread = threading.Thread(target=renderDotCode,kwargs={'dotcode':dotCode})
+    graphviz_thread.setDaemon(True)
     graphviz_thread.start()
     
     

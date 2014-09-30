@@ -20,7 +20,8 @@ class MyBreakpoint(gdb.Breakpoint):
 	def stop (self):
 		self.plugin.handleStopEvent()
 		return False #don't stop
-
+	
+	
 class LockTreeCommand(gdb.Command):
 	"""Greet the whole world."""
 	registery = {}
@@ -38,10 +39,21 @@ class LockTreeCommand(gdb.Command):
 			LockTreeCommand.registery[name] = [plugin,]
 		else:
 			LockTreeCommand.registery[name].append(plugin)
-	def exit_handler(event):
-		print("event type: exit")
-		print("exit code: "+str(event.exit_code))
-		LockTreeAlgo.forrest = LockTreeAlgo.LockForrest()
+			
+	def exit_handler(self, event):
+		print("recorded Locktrees will be deleted on restart")
+		self.exited = True
+	def cont_handler(self, event):
+		if isinstance(event, gdb.ContinueEvent):
+			print("event type: ContinueEvent")
+		else:
+			if isinstance(event, gdb.BreakpointEvent):
+				print("event type: BreakpointEvent")
+			else:
+				print("event type: Unkown")
+		if self.exited:
+			LockTreeAlgo.forrest = LockTreeAlgo.LockForrest()
+			self.exited = False
 
 	def importPluginFiles(self):
 		"""imports all .py files inside the plugin directory 
@@ -55,7 +67,7 @@ class LockTreeCommand(gdb.Command):
 			print("import pluginFile "+file)
 			
 	def __init__ (self):
-		super (LockTreeCommand, self).__init__ ("locktree", gdb.COMMAND_USER)
+		super (LockTreeCommand, self).__init__ ("locktree", gdb.COMMAND_USER,prefix=True)
 		self.dont_repeat()
 		self.breakpoints = []
 		self.subCommands = {		"plugins":self.printPlugins,
@@ -67,8 +79,12 @@ class LockTreeCommand(gdb.Command):
 									"printgui":self.printTreeGui
 													 }
 		self.importPluginFiles()
-		gdb.events.exited.connect(LockTreeCommand.exit_handler)
-
+		#necessary to detect a restart of the inferior -- we have to reset the Locktree on restart
+		self.exited = False
+		gdb.events.exited.connect(self.exit_handler)
+		gdb.events.cont.connect(self.cont_handler)
+	def complete(self,text, word):
+		pass
 	def invoke (self, arg, from_tty):
 		try:
 			argv = gdb.string_to_argv(arg)
@@ -114,7 +130,8 @@ class LockTreeCommand(gdb.Command):
 		""" print the current locktree for the given ThreadID"""
 		for arg in argv[1:]:
 			thread = Utils.Thread(int(arg))
-			LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printTree,thread)
+			res = LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printTree,thread)
+			print(res)
 	
 	def printTreeGui(self,argv):
 		""" print the current locktree for all given ThreadIDs with graphviz"""
