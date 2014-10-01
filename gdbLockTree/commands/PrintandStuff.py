@@ -3,7 +3,7 @@ from .AcquireRelease import LockNode
 from ..Utils import Thread
 
 def printThreads(trees):
-    """returns list of string representations of all threads that have a lockTree"""
+    """returns 2 list of strings; fist one contains the unique id, second one the human readable infos of all threads as string"""
     ids = []
     infos = []
     for n in trees:

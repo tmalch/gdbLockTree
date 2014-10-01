@@ -9,9 +9,11 @@ def getThreadID():
 	sym = gdb.lookup_global_symbol("currentThread")
 	if int(sym.value()) != 0:
 		threadobj = sym.value().dereference()
-		addr = str(sym.value())
+		addr = int(sym.value())
 		name = threadobj['name_'].string()
 		return (addr,name)
+	else:
+		return (None,"locktree wasn't able to identify thread")
 
 
 class SwebMutextBP(PluginBase):
@@ -28,7 +30,6 @@ class SwebMutextBP(PluginBase):
 		btstring = ""
 		for l in bt:
 			btstring +=l
-		
 		self.function(tid,lid,thread_info=thread_name, lock_info=lock_name,call_location=btstring)
 
 

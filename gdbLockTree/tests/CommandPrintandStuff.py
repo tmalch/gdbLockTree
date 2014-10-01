@@ -3,6 +3,7 @@ from gdbLockTree.commands import PrintandStuff
 from gdbLockTree.commands.AcquireRelease import ThreadNode
 import random
 from . import Utils
+from ..Utils import Thread
 
 class PrintTests(unittest.TestCase):
     def setUp(self):
@@ -10,12 +11,12 @@ class PrintTests(unittest.TestCase):
     def test_printThreads1(self):
         trees = []
         exp_res = [] 
-        res = PrintandStuff.printThreads(trees)
+        res,_ = PrintandStuff.printThreads(trees)
         self.assertListEqual(res, exp_res)
     def test_printThreads2(self):
-        trees = [ThreadNode(tid) for tid in range(10) ]
+        trees = [ThreadNode(Thread(tid)) for tid in range(10) ]
         exp_res = [str(tid) for tid in range(10)] 
-        res = PrintandStuff.printThreads(trees)
+        res,_ = PrintandStuff.printThreads(trees)
         self.assertListEqual(res, exp_res)
 
     def test_uselessLocks1(self):

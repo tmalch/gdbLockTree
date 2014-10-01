@@ -26,8 +26,8 @@ def acquire(trees,thread,lock,call_location=None):
         trees.append(treeroot) 
 
     currentNode = treeroot.currentNode
-    if currentNode.isAbove(lock):
-        print("reentrant lock: Lock "+str(lock)+" is still acquired")
+    #if currentNode.isAbove(lock):
+        #print("reentrant lock: Lock "+str(lock)+" is still acquired")
         # reentrant locks get added again
     if currentNode.findChild(lock) != None:
         # follow given path if already taken in the past
@@ -43,7 +43,7 @@ def release(trees,thread,lock,call_location=None):
         return
     treeroot = Utils.getTreeForThread(trees,thread)
     if treeroot is None:
-        print("ERROR? thread never acquired lock but releases it")
+        #print("ERROR? thread never acquired lock but releases it")
         treeroot = ThreadNode(thread)
         trees.append(treeroot)      
         
