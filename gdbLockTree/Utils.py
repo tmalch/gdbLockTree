@@ -1,10 +1,16 @@
 
 
 def getTreeForThread(trees,thread):
+    """returns the first node with thread as value from list trees
+        None if it doesn't exist """
     for thread_root in trees:
         if thread_root.value == thread:
             return thread_root
     return None
+
+def completeFromList(word,list):
+    """returns list of possible completions of word out of list"""
+    return [elem for elem in list if elem.startswith(word)]
 
 class Thread:
     def __init__(self,thread_id,thread_info=""):

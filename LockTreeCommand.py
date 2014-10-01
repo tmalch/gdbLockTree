@@ -20,8 +20,7 @@ class MyBreakpoint(gdb.Breakpoint):
 	def stop (self):
 		self.plugin.handleStopEvent()
 		return False #don't stop
-	
-	
+
 class LockTreeCommand(gdb.Command):
 	"""Greet the whole world."""
 	registery = {}
@@ -67,7 +66,7 @@ class LockTreeCommand(gdb.Command):
 			print("import pluginFile "+file)
 			
 	def __init__ (self):
-		super (LockTreeCommand, self).__init__ ("locktree", gdb.COMMAND_USER,prefix=True)
+		super (LockTreeCommand, self).__init__ ("locktree", gdb.COMMAND_USER,prefix=False)
 		self.dont_repeat()
 		self.breakpoints = []
 		self.subCommands = {		"plugins":self.printPlugins,
@@ -83,8 +82,9 @@ class LockTreeCommand(gdb.Command):
 		self.exited = False
 		gdb.events.exited.connect(self.exit_handler)
 		gdb.events.cont.connect(self.cont_handler)
+		
 	def complete(self,text, word):
-		pass
+		return Utils.completeFromList(word, self.subCommands.keys())
 	def invoke (self, arg, from_tty):
 		try:
 			argv = gdb.string_to_argv(arg)
@@ -131,7 +131,8 @@ class LockTreeCommand(gdb.Command):
 		for arg in argv[1:]:
 			thread = Utils.Thread(int(arg))
 			res = LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printTree,thread)
-			print(res)
+			if res is not None:
+				print(res)
 	
 	def printTreeGui(self,argv):
 		""" print the current locktree for all given ThreadIDs with graphviz"""
@@ -140,4 +141,3 @@ class LockTreeCommand(gdb.Command):
 			LockTreeAlgo.forrest.executeCommandonTree(TreeView.generateDotCode,thread)
 
 LockTreeCommand()
-
