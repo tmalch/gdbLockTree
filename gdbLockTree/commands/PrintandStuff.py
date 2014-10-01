@@ -14,7 +14,7 @@ def printThreads(trees):
 
 
 def uselessLocks(trees):
-    """ reports all Locks that are only acquired in a single thread as a list of Lock obj"""
+    """ reports all Locks that are only used in a single thread as a list of Lock obj"""
     counted_locks = dict()
     for tree in trees:
         lockset = set([n.value for n in tree.getDescendants() if isinstance(n, LockNode)]) #so that a lock is counted only once if it occurs multiple times in a Locktree

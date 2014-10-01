@@ -75,7 +75,8 @@ class LockTreeCommand(gdb.Command):
 									"check":self.check, # Run the Deadlock Detection
 									"printthreads":self.printThreads,# print the current list of ThreadIDs that have acquired a lock
 									"printtree":self.printTree,# print the current locktree for the given ThreadID
-									"printgui":self.printTreeGui
+									"printgui":self.printTreeGui,
+									"useless":self.useless
 													 }
 		self.importPluginFiles()
 		#necessary to detect a restart of the inferior -- we have to reset the Locktree on restart
@@ -132,7 +133,13 @@ class LockTreeCommand(gdb.Command):
 		deadlocks = LockTreeAlgo.forrest.executeCommandonForrest(DeadlockDetection.check)
 		for d in deadlocks:
 			print(str(d))
-		
+	def useless(self,argv):
+		useless_locks = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.uselessLocks)
+		if useless_locks == []:
+			print("No useless Locks found")
+		else:
+			for d in useless_locks:
+				print(str(d))
 	def printThreads(self,argv):
 		(threadids,threadinfos) = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printThreads)
 		res = ""
