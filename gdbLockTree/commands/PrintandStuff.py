@@ -1,9 +1,16 @@
 
 from .AcquireRelease import LockNode
+from ..Utils import Thread
 
 def printThreads(trees):
     """returns list of string representations of all threads that have a lockTree"""
-    return [ str(n.value) for n in trees]
+    ids = []
+    infos = []
+    for n in trees:
+        if isinstance(n.value, Thread):
+            ids.append(str(n.value.ID))
+            infos.append(str(n.value.info))
+    return (ids,infos)
 
 
 def uselessLocks(trees):

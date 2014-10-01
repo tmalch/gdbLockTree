@@ -84,7 +84,18 @@ class LockTreeCommand(gdb.Command):
 		gdb.events.cont.connect(self.cont_handler)
 		
 	def complete(self,text, word):
-		return Utils.completeFromList(word, self.subCommands.keys())
+		argv = text.split(" ")
+		if word == argv[0]:
+			return Utils.completeFromList(word, self.subCommands.keys())
+		else:
+			subcommand = argv[0]
+			if subcommand in ["printtree","printgui"]:
+				threadids,_ = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printThreads)
+				completion = Utils.completeFromList(word, threadids)
+				if completion == []:
+					completion.append("\"No Thread available\n")
+				return completion
+	
 	def invoke (self, arg, from_tty):
 		try:
 			argv = gdb.string_to_argv(arg)
@@ -123,8 +134,14 @@ class LockTreeCommand(gdb.Command):
 			print(str(d))
 		
 	def printThreads(self,argv):
-		threads = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printThreads)
-		print(", ".join(threads))
+		(threadids,threadinfos) = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printThreads)
+		res = ""
+		for tid,info in zip(threadids,threadinfos):
+			res += tid
+			if info != "":
+				res += " :: "+info
+			res += "\n"
+		print(res[:-1])
 
 	def printTree(self,argv):
 		""" print the current locktree for the given ThreadID"""
