@@ -93,9 +93,12 @@ class LockTreeCommand(gdb.Command):
 			if subcommand in ["printtree","printgui"]:
 				threadids,_ = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printThreads)
 				completion = Utils.completeFromList(word, threadids)
-				if completion == []:
-					completion.append("\"No Thread available\n")
+				if completion == [] and word == "":
+					completion.append("\"No Thread available\"")
 				return completion
+			elif subcommand == "monitore":
+				completion = Utils.completeFromList(word, LockTreeCommand.registery.keys())
+				return completion				
 	
 	def invoke (self, arg, from_tty):
 		try:
@@ -108,6 +111,8 @@ class LockTreeCommand(gdb.Command):
 				print(command)
 
 	def printPlugins(self,argv):
+		if len(LockTreeCommand.registery) == 0:
+			print("\"No Plugins available\"")
 		for ltype in LockTreeCommand.registery.keys():
 			print(ltype)
 	def createBreakpoints(self,argv):
@@ -131,27 +136,34 @@ class LockTreeCommand(gdb.Command):
 
 	def check(self,argv):
 		deadlocks = LockTreeAlgo.forrest.executeCommandonForrest(DeadlockDetection.check)
+		if not deadlocks:
+			print("no possible Deadlocks found")
 		for d in deadlocks:
 			print(str(d))
 	def useless(self,argv):
 		useless_locks = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.uselessLocks)
-		if useless_locks == []:
+		if not useless_locks:
 			print("No useless Locks found")
 		else:
 			for d in useless_locks:
 				print(str(d))
 	def printThreads(self,argv):
 		(threadids,threadinfos) = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printThreads)
-		res = ""
-		for tid,info in zip(threadids,threadinfos):
-			res += tid
-			if info != "":
-				res += " :: "+info
-			res += "\n"
-		print(res[:-1])
+		if not threadids:
+			print("No Threads recorded")
+		else:
+			res = ""
+			for tid,info in zip(threadids,threadinfos):
+				res += tid
+				if info != "":
+					res += " :: "+info
+				res += "\n"
+			print(res[:-1])
 
 	def printTree(self,argv):
 		""" print the current locktree for the given ThreadID"""
+		if not argv[1:]:
+			print("Usage: printtree <threadid>")
 		for arg in argv[1:]:
 			thread = Utils.Thread(int(arg))
 			res = LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printTree,thread)
@@ -160,6 +172,8 @@ class LockTreeCommand(gdb.Command):
 	
 	def printTreeGui(self,argv):
 		""" print the current locktree for all given ThreadIDs with graphviz"""
+		if not argv[1:]:
+			print("Usage: printgui <threadid>")
 		for arg in argv[1:]:
 			thread = Utils.Thread(int(arg))
 			LockTreeAlgo.forrest.executeCommandonTree(TreeView.generateDotCode,thread)

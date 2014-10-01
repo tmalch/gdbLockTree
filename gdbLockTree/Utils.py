@@ -26,7 +26,10 @@ class Thread:
     def __hash__(self):
         return int(self.ID)
     def __str__(self):
-        return str(self.info)+":"+str(self.ID)
+        res = str(self.ID)
+        if self.info:
+            res += ":"+str(self.info)
+        return res
         
 class Lock:
     def __init__(self,lockid,lock_location):
