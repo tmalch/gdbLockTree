@@ -4,8 +4,8 @@ import gdb
 
 ## HELPER METHODS ## to be used for implementing  	
 def getGDBThreadID():
-	return gdb.selected_thread().ptid[1]
-	#return gdb.selected_thread().num
+	#return gdb.selected_thread().ptid[1]
+	return gdb.selected_thread().num
 
 def getVariableValue(name):
 	frame = gdb.newest_frame()
@@ -29,12 +29,14 @@ def getVariableNameForPointer(variable_ptr):
 		varname = varname.split(" ")
 		if len(varname) > 0:
 			return varname[0]
+	return "Unknown"
 
 def getDefinitionLocationOfVariable(name):
 	r = gdb.lookup_symbol(name)
 	sym = r[0]
 	if sym != None:
 		return str(sym.symtab.filename)+":"+str(sym.line)
+	return "Unknown location"
 		
 def getCallingFunctionName(frame = None):
 		if frame == None:
