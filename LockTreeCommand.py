@@ -172,7 +172,7 @@ class LockTreeCommand(gdb.Command):
 				print(res)
 	def printHoldLocks(self,argv):
 		if not argv[1:]:
-			print("Usage: printtree <threadid>")
+			print("Usage: holdlocks <threadid>")
 		for arg in argv[1:]:
 			thread = Utils.Thread(int(arg))
 			res = LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printHoldLocks,thread)
