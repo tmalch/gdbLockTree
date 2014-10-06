@@ -15,23 +15,23 @@ void *task_code(void *argument)
    tid = *((int *) argument);
    
    for(int loop=0;loop<10;loop++){
-	   pthread_mutex_lock(&l3);
+//	   pthread_mutex_lock(&l3);
 		 if(tid == 1){
-		 	pthread_mutex_lock(&l1);
+//		 	pthread_mutex_lock(&l1);
 		 	pthread_mutex_lock(&l2);
-			//printf("Hello World! It's me, thread %d!\n", tid);
-			//pthread_yield();
+			printf("Hello World! It's me, thread %d!\n", tid);
+			pthread_yield();
+//		  pthread_mutex_unlock(&l1);
 		  pthread_mutex_unlock(&l2);
-		  pthread_mutex_unlock(&l1);
 		 }else{
+//		 	pthread_mutex_lock(&l2);
 		 	pthread_mutex_lock(&l1);
-		 	pthread_mutex_lock(&l2);
-			//printf("Hello World! It's me, thread %d!\n", tid);
+			printf("Hello World! It's me, thread %d!\n", tid);
 			//pthread_yield();
-		  pthread_mutex_unlock(&l2);
+//		  pthread_mutex_unlock(&l2);
 		  pthread_mutex_unlock(&l1);   
 		 }
-		 pthread_mutex_unlock(&l3);
+//		 pthread_mutex_unlock(&l3);
  	 }
    return NULL;
 }

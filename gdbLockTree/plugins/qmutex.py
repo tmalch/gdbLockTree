@@ -17,7 +17,7 @@ class QMutextBP(PluginBase):
 		lock_ptr = GDBHelper.getVariableValue("this")
 		lid = lock_ptr
 		lock_name = GDBHelper.getVariableNameForPointer(lock_ptr)
-		linfo = lock_name + "defined at "+GDBHelper.getDefinitionLocationOfVariable(lock_name)
+		linfo = lock_name + " defined at "+GDBHelper.getDefinitionLocationOfVariable(lock_name)
 		call_loc = GDBHelper.getFunctionName()+" called from "+GDBHelper.getCallingFunctionName()+ " at "+GDBHelper.getCallingLocation()
 		self.function(tid,lid,lock_info=linfo,call_location=call_loc)
 

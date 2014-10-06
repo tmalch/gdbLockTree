@@ -1,6 +1,8 @@
 
 from .AcquireRelease import LockNode
+from .AcquireRelease import ThreadNode
 from ..Utils import Thread
+from ..Utils import Lock
 
 def printThreads(trees):
     """returns 2 list of strings; fist one contains the unique id, second one the human readable infos of all threads as string"""
@@ -27,6 +29,41 @@ def uselessLocks(trees):
             useless_locks.append(lock)#lock is useless
     return useless_locks
 
+def printHoldLocks(tree):
+    """ returns list with all locks hold at the moment by the given thread """
+    if tree is None:
+        return
+    if type(tree) is not ThreadNode:
+        print("not a locktree root")
+        return
+    hold_lock_nodes = tree.currentNode.getAncestorList()
+    hold_lock_nodes = hold_lock_nodes[:-1]
+    if not hold_lock_nodes:
+        return ["No Locks hold at the moment"]
+    res = list()
+    for locknode in hold_lock_nodes:
+        lockstr = str(locknode.value.ID)
+        lockstr += "-- ("+str(locknode.value.info)+")"
+        lockstr += " "+str(len(locknode.getCallLocations()))+" calls"
+        lockstr += "\n" 
+        for loc in locknode.getCallLocations():
+            lockstr += "  "+str(loc) + "\n"
+        res.append(lockstr)
+    return res
+
+def LocktoStr(lock):
+    lockstr = str(lock.ID)
+    if lock.info is not None:
+        lockstr += "-- ("+str(lock.info)+")"
+    return lockstr
+
+def LockNodetoStr(locknode):
+        lockstr = LocktoStr(locknode.value)
+        lockstr += " "+str(len(locknode.getCallLocations()))+" calls"
+        lockstr += "\n" 
+        for loc in locknode.getCallLocations():
+            lockstr += "  "+str(loc) + "\n"
+        return lockstr
 
 def printTree(tree):
     return printSubTree(tree)
@@ -35,7 +72,7 @@ def printSubTree(node,prefix=""):
     """ returns string representation of the subTree starting in node"""
     if node is None:
         return ""
-    res = prefix+"|--"+str(node.value)+"\n"
+    res = prefix+"|--"+LocktoStr(node.value)+"\n"
     for n in node.children:
         res += printSubTree(n,prefix=prefix+"|  ")
     return res
