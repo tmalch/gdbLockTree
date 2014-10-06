@@ -5,11 +5,16 @@ from .. import Utils
 class LockNode(Node):
     def __init__(self,lock,call_location=None,parent=None):
         Node.__init__(self, lock, parent)
-        self.attributes['callLocations'] = set([call_location])
+        self.attributes['callLocations'] = set()
+        self.addCallLoc(call_location)
         
     def addCallLoc(self,call_loc):
         if call_loc is not None:
-            self.attributes['callLocations'].update(call_loc)
+            self.attributes['callLocations'].add(call_loc)
+    def getCallLocations(self):
+        """ returns set of call Locations of this node """
+        if 'callLocations' in self.attributes:
+            return self.attributes['callLocations']
 
 class ThreadNode(Node): 
     """  represents lockTree of one Thread"""
