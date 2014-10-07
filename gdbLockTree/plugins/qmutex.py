@@ -2,7 +2,7 @@
 from .. import gdbHelper as GDBHelper
 from ..pluginBase import PluginBase
 from .. import LockInterface as Interface
-
+import gdb
 #interface.acquire(tid,lock_id,lock_info,call_location)
 #interface.release(tid,lock_id,lock_info,call_location)
 
@@ -15,7 +15,7 @@ class QMutextBP(PluginBase):
 	def handleStopEvent(self):
 		tid = GDBHelper.getGDBThreadID()
 		lock_ptr = GDBHelper.getVariableValue("this")
-		lid = lock_ptr
+		lid = lock_ptr.cast(gdb.lookup_type("int"))
 		lock_name = GDBHelper.getVariableNameForPointer(lock_ptr)
 		linfo = lock_name + " defined at "+GDBHelper.getDefinitionLocationOfVariable(lock_name)
 		call_loc = GDBHelper.getFunctionName()+" called from "+GDBHelper.getCallingFunctionName()+ " at "+GDBHelper.getCallingLocation()

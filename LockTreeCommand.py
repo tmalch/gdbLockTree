@@ -77,7 +77,8 @@ class LockTreeCommand(gdb.Command):
 									"printtree":self.printTree,# print the current locktree for the given ThreadID
 									"printgui":self.printTreeGui,
 									"useless":self.useless,
-									"holdlocks":self.printHoldLocks
+									"holdlocks":self.printHoldLocks,
+									"lockinfo":self.printLockInfo
 													 }
 		self.importPluginFiles()
 		#necessary to detect a restart of the inferior -- we have to reset the Locktree on restart
@@ -177,9 +178,18 @@ class LockTreeCommand(gdb.Command):
 			thread = Utils.Thread(int(arg))
 			res = LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printHoldLocks,thread)
 			if res is not None:
-				for l in res:
-					print(l)
-				#print(" \n ".join(res))
+				print(" \n ".join(res))
+	def printLockInfo(self,argv):
+		if not argv[1:]:
+			print("Usage: lockinfo <lockid>")
+		for arg in argv[1:]:
+			lock = Utils.Lock(int(arg),None)
+			res = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printLockInfo,(lock,))
+			if res is None:
+				print("Lock not found")
+			else:
+				print(res)
+		
 	def printTreeGui(self,argv):
 		""" print the current locktree for all given ThreadIDs with graphviz"""
 		if not argv[1:]:

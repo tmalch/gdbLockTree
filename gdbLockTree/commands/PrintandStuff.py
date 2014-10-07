@@ -51,16 +51,39 @@ def printHoldLocks(tree):
         res.append(lockstr)
     return res
 
+def printLockInfo(trees,query):
+    lock = None
+    threadcount = 0
+    call_locations = []
+    for tree in trees:
+        occurrences = tree.findAll(query)
+        if occurrences:
+            if lock is None:
+                lock = occurrences[0].value
+            threadcount += 1
+            threadstr = "Thread "+str(tree.value)+" called the lock from \n"
+            for n in occurrences:
+                for loc in n.getCallLocations():
+                    threadstr += "  "+str(loc) + "\n"
+            call_locations.append(threadstr)
+    if lock:
+        res = LocktoStr(lock)+" \n"
+        res += str(threadcount)+" Thread call this lock \n"
+        res += " ".join(call_locations)
+        return res
+    else:
+        return None
+        
 def LocktoStr(lock):
     lockstr = str(lock.ID)
     if lock.info is not None:
-        lockstr += "-- ("+str(lock.info)+")"
+        lockstr += " -- ("+str(lock.info)+")"
     return lockstr
 
 def LockNodetoStr(locknode):
         lockstr = LocktoStr(locknode.value)
         lockstr += " "+str(len(locknode.getCallLocations()))+" calls"
-        lockstr += "\n" 
+        lockstr += "\n"
         for loc in locknode.getCallLocations():
             lockstr += "  "+str(loc) + "\n"
         return lockstr

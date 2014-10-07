@@ -15,6 +15,7 @@ class LockNode(Node):
         """ returns set of call Locations of this node """
         if 'callLocations' in self.attributes:
             return self.attributes['callLocations']
+        return set()
 
 class ThreadNode(Node): 
     """  represents lockTree of one Thread"""
