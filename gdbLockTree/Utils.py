@@ -12,6 +12,11 @@ def completeFromList(word,list):
     """returns list of possible completions of word out of list"""
     return [elem for elem in list if elem.startswith(word)]
 
+def nicestr(obj):
+    if hasattr(obj, "nicestr"):
+        return obj.nicestr()
+    else:
+        return str(obj)
 class Thread:
     def __init__(self,thread_id,thread_info=""):
         self.ID = thread_id
@@ -25,15 +30,18 @@ class Thread:
         return self.ID == other.ID
     def __hash__(self):
         return int(self.ID)
-    def __str__(self):
+    def nicestr(self):
         res = str(self.ID)
-        if self.info:
-            res += ":"+str(self.info)
+        if self.info is not None:
+            res += " -- ("+str(self.info)+")"
         return res
+    def __str__(self):
+        return str(self.ID)
         
 class Lock:
     def __init__(self,lockid,lock_location):
-        self.ID = lockid
+        """lockid: an unique integer identifying the lock (most likely the address)"""
+        self.ID = int(lockid)
         self.info = lock_location
     def __eq__(self, other):
         if other == None:
@@ -42,13 +50,19 @@ class Lock:
             return False
         return self.ID == other.ID
     def __hash__(self):
-        return int(self.ID)
+        return self.ID
+    def nicestr(self):
+        lockstr = str(hex(self.ID))
+        if self.info is not None:
+            lockstr += " -- ("+str(self.info)+")"
+        return lockstr
     def __str__(self):
-        return str(self.ID)
+        return str(hex(self.ID))
 
 class DeadLock:
     """represents all information about a possible deadlock
-        involvednodes: two lists of nodes which locks have triggered the warning
+        involvednodes: a tuple for each thread containing first the locknode that was checked
+                        and second the list of nodes which trigger the deadlock with the first lock
         threads: the two Threads that are involved, tuple of Thread objects """
     def __init__(self,involvedthreads,involvednodes_thread0,involvednodes_thread1):
         assert involvedthreads[0] != involvedthreads[1]
@@ -70,6 +84,8 @@ class DeadLock:
     def __hash__(self):
         return hash((self.threads,self.lock,self.lockset) )
     def __eq__(self, other):
+        """ 2 deadlocks are equal if the same threads are involved and
+            the same lock has a deadlock with the same other locks (lockset) """
         if other == None:
             return False 
         if type(other) != DeadLock:

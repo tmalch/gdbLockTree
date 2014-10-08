@@ -24,7 +24,7 @@ class SwebMutextBP(PluginBase):
 		
 		tid,thread_name = getThreadID()
 		lock_ptr = GDBHelper.getVariableValue("this")
-		lid = lock_ptr
+		lid = lock_ptr.cast(gdb.lookup_type("int"))
 		lock_name = lock_ptr.dereference()['name_']
 		bt = GDBHelper.getBacktrace()
 		btstring = ""

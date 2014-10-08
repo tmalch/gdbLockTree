@@ -2,7 +2,7 @@
 from .AcquireRelease import LockNode
 from .AcquireRelease import ThreadNode
 from ..Utils import Thread
-from ..Utils import Lock
+from ..Utils import nicestr
 
 def printThreads(trees):
     """returns 2 list of strings; fist one contains the unique id, second one the human readable infos of all threads as string"""
@@ -67,21 +67,15 @@ def printLockInfo(trees,query):
                     threadstr += "  "+str(loc) + "\n"
             call_locations.append(threadstr)
     if lock:
-        res = LocktoStr(lock)+" \n"
+        res = lock.nicestr()+" \n"
         res += str(threadcount)+" Thread call this lock \n"
         res += " ".join(call_locations)
         return res
     else:
         return None
         
-def LocktoStr(lock):
-    lockstr = str(lock.ID)
-    if lock.info is not None:
-        lockstr += " -- ("+str(lock.info)+")"
-    return lockstr
-
 def LockNodetoStr(locknode):
-        lockstr = LocktoStr(locknode.value)
+        lockstr = locknode.value.nicestr()
         lockstr += " "+str(len(locknode.getCallLocations()))+" calls"
         lockstr += "\n"
         for loc in locknode.getCallLocations():
@@ -95,7 +89,7 @@ def printSubTree(node,prefix=""):
     """ returns string representation of the subTree starting in node"""
     if node is None:
         return ""
-    res = prefix+"|--"+LocktoStr(node.value)+"\n"
+    res = prefix+"|--"+nicestr(node.value)+"\n"
     for n in node.children:
         res += printSubTree(n,prefix=prefix+"|  ")
     return res

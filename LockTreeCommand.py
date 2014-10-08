@@ -179,11 +179,12 @@ class LockTreeCommand(gdb.Command):
 			res = LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printHoldLocks,thread)
 			if res is not None:
 				print(" \n ".join(res))
+	
 	def printLockInfo(self,argv):
 		if not argv[1:]:
 			print("Usage: lockinfo <lockid>")
 		for arg in argv[1:]:
-			lock = Utils.Lock(int(arg),None)
+			lock = Utils.Lock(int(arg,base=16),None)
 			res = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printLockInfo,(lock,))
 			if res is None:
 				print("Lock not found")

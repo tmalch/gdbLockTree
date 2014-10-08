@@ -2,6 +2,7 @@
 from .. import gdbHelper as GDBHelper
 from ..pluginBase import PluginBase
 from .. import LockInterface
+import gdb
 
 class pthreadMutex(PluginBase):
 	def __init__(self,location,function):
@@ -10,7 +11,7 @@ class pthreadMutex(PluginBase):
 	def handleStopEvent(self):
 		tid = GDBHelper.getGDBThreadID()
 		lock_ptr = GDBHelper.getVariableValue("mutex")
-		lid = lock_ptr
+		lid = lock_ptr.cast(gdb.lookup_type("int"))
 		lock_name = GDBHelper.getVariableNameForPointer(lock_ptr)
 		linfo = lock_name + " defined at "+GDBHelper.getDefinitionLocationOfVariable(lock_name)
 		call_loc = GDBHelper.getFunctionName()+" called from "+GDBHelper.getCallingFunctionName()+ " at "+GDBHelper.getCallingLocation()
