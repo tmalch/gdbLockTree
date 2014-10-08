@@ -4,7 +4,7 @@ from gdbLockTree.tests import Utils
 from gdbLockTree.Utils import DeadLock
 from gdbLockTree.commands import DeadlockDetectionBase as Base
 from gdbLockTree.commands import DeadlockDetectionPaper as PaperImpl
-from gdbLockTree.commands import DeadlockDetection as Optimized2
+from gdbLockTree.commands import DeadlockDetection as Optimized
 from gdbLockTree.commands.AcquireRelease import ThreadNode
 import cProfile
 import pstats
@@ -34,7 +34,12 @@ class DeadLockTests(unittest.TestCase):
     def test_time2(self):
         """ many large trees """
         print("*********DeadlockDetection4**************")
-        res = Optimized2.check(self.trees)
+        res = Optimized.check(self.trees)
+
+    def test_lockDictGen(self):
+        """ many large trees """
+        print("*********DeadlockDetection4**************")
+        res = Optimized.DeadlockDetection.generateLockMaps(self.trees)
 
 
 

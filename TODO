@@ -3,7 +3,6 @@
 
 TODO
 *Mit SWEB testen
-*bei neu starten des programs über gdb den locktree zurücksetzen
 *besserer Ausgabe
 	possible Deadlocks besser aufbereiten
 

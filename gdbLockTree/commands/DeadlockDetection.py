@@ -12,7 +12,7 @@ class DeadlockDetection():
         self.trees = trees
         self.Above = dict()
         self.Below = dict()
-        self.Lockmaps = self.generateLockMaps(self.trees)
+        self.Lockmaps = DeadlockDetection.generateLockMaps(self.trees)
 
     def detect(self):
         """ checks for Deadlock between all Locktrees given a list of tree roots
@@ -44,19 +44,21 @@ class DeadlockDetection():
                         deadlocks.append(DeadLock((tree1.value,tree2.value),(node1,t1deadlocks),(node2,t2deadlocks)))
         return deadlocks
     
-    def generateLockMaps(self,trees):
+    def generateLockMaps(trees):
         res = list()
         for tree in trees:
-            d = dict()
-            for node in tree.getDescendantsList():
-                if not isinstance(node, LockNode):
-                    continue
-                if node.value in d:
-                    d[node.value].append(node)
-                else:
-                    d[node.value] = [node,]
-            res.append(d)
+            res.append(DeadlockDetection.generateLockMap(tree))
         return res
+    def generateLockMap(tree):
+        d = dict()
+        for node in tree.getDescendantsList():
+            if not isinstance(node, LockNode):
+                continue
+            if node.value in d:
+                d[node.value].append(node)
+            else:
+                d[node.value] = [node,]
+        return d
 
     def getBelow(self,node):
         if node in self.Below:
