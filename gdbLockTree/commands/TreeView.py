@@ -37,10 +37,12 @@ def NodetoDot(node):
     if not isinstance(node, Node):
         return ""
     label = str(node.value)
+    if node.value.info:
+        label += "<BR/><FONT POINT-SIZE=\"8\" COLOR=\"grey\">"+node.value.info+"</FONT>"
     node_id = str(id(node))
-    dot_node = "\""+node_id+"\"[label=\""+label+"\"];\n"
+    dot_node = "\""+node_id+"\"[label=<"+label+"> ];\n"
     if node.isRoot():
-        return dot_node #+"{rank = source; "+node_id+"}\n"
+        return dot_node
     parent_node_id = str(id(node.parent))
     edge = "\""+parent_node_id+"\""+" -- "+"\""+node_id+"\";\n"
     return dot_node+edge
@@ -49,7 +51,7 @@ def generateDotCode(root):
     """ print the current locktree for the given ThreadID with graphviz"""
     if root is None:
         return
-    dotCode = "graph G7 { \n node [fontsize=\"8\"];"
+    dotCode = "graph G7 { \n node [fontsize=\"10\"];"
     for edge in root.mapSubtree(NodetoDot):
         dotCode += edge
     dotCode += "}"
