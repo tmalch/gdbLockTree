@@ -43,13 +43,6 @@ class LockTreeCommand(gdb.Command):
 		print("recorded Locktrees will be deleted on restart")
 		self.exited = True
 	def cont_handler(self, event):
-		if isinstance(event, gdb.ContinueEvent):
-			print("event type: ContinueEvent")
-		else:
-			if isinstance(event, gdb.BreakpointEvent):
-				print("event type: BreakpointEvent")
-			else:
-				print("event type: Unkown")
 		if self.exited:
 			LockTreeAlgo.forrest = LockTreeAlgo.LockForrest()
 			self.exited = False
@@ -147,8 +140,9 @@ class LockTreeCommand(gdb.Command):
 		if not useless_locks:
 			print("No useless Locks found")
 		else:
-			for d in useless_locks:
-				print(str(d))
+			print("These locks seem to get called only by one thread")
+			for l,t in useless_locks:
+				print(Utils.nicestr(l)+" called only from Thread "+Utils.nicestr(t))
 	def printThreads(self,argv):
 		(threadids,threadinfos) = LockTreeAlgo.forrest.executeCommandonForrest(PrintandStuff.printThreads)
 		if not threadids:
@@ -167,7 +161,7 @@ class LockTreeCommand(gdb.Command):
 		if not argv[1:]:
 			print("Usage: printtree <threadid>")
 		for arg in argv[1:]:
-			thread = Utils.Thread(int(arg))
+			thread = Utils.Thread(int(arg,base=16))
 			res = LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printTree,thread)
 			if res is not None:
 				print(res)
@@ -175,7 +169,7 @@ class LockTreeCommand(gdb.Command):
 		if not argv[1:]:
 			print("Usage: holdlocks <threadid>")
 		for arg in argv[1:]:
-			thread = Utils.Thread(int(arg))
+			thread = Utils.Thread(int(arg,base=16))
 			res = LockTreeAlgo.forrest.executeCommandonTree(PrintandStuff.printHoldLocks,thread)
 			if res is not None:
 				print(" \n ".join(res))
@@ -196,7 +190,7 @@ class LockTreeCommand(gdb.Command):
 		if not argv[1:]:
 			print("Usage: printgui <threadid>")
 		for arg in argv[1:]:
-			thread = Utils.Thread(int(arg))
+			thread = Utils.Thread(int(arg,base=16))
 			LockTreeAlgo.forrest.executeCommandonTree(TreeView.generateDotCode,thread)
 
 LockTreeCommand()

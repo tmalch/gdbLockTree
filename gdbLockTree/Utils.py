@@ -19,6 +19,7 @@ def nicestr(obj):
         return str(obj)
 class Thread:
     def __init__(self,thread_id,thread_info=""):
+        """thread_id: an unique integer identifying the thread"""
         self.ID = thread_id
         self.info = thread_info
 
@@ -31,12 +32,12 @@ class Thread:
     def __hash__(self):
         return int(self.ID)
     def nicestr(self):
-        res = str(self.ID)
+        res = str(hex(self.ID))
         if self.info is not None:
             res += " -- ("+str(self.info)+")"
         return res
     def __str__(self):
-        return str(self.ID)
+        return str(hex(self.ID))
         
 class Lock:
     def __init__(self,lockid,lock_location):

@@ -10,7 +10,7 @@ def printThreads(trees):
     infos = []
     for n in trees:
         if isinstance(n.value, Thread):
-            ids.append(str(n.value.ID))
+            ids.append(str(n.value))
             infos.append(str(n.value.info))
     return (ids,infos)
 
@@ -19,14 +19,18 @@ def uselessLocks(trees):
     """ reports all Locks that are only used in a single thread as a list of Lock obj"""
     counted_locks = dict()
     for tree in trees:
-        lockset = set([n.value for n in tree.getDescendants() if isinstance(n, LockNode)]) #so that a lock is counted only once if it occurs multiple times in a Locktree
+        lockset = set([n.value for n in tree.getDescendants() if isinstance(n, LockNode)]) #using a set so that a lock is counted only once if it occurs multiple times in a Locktree
         for lid in lockset:
-                counted_locks[lid] = counted_locks.get(lid,0) + 1
+            if lid in counted_locks:
+                (count,_) = counted_locks[lid]
+                counted_locks[lid] = (count + 1,tree.value)
+            else:
+                counted_locks[lid] = (1,tree.value)
     
     useless_locks = []
-    for lock,count in counted_locks.items():
+    for lock,(count,thread) in counted_locks.items():
         if count == 1:
-            useless_locks.append(lock)#lock is useless
+            useless_locks.append((lock,thread))#lock is useless
     return useless_locks
 
 def printHoldLocks(tree):
@@ -42,12 +46,11 @@ def printHoldLocks(tree):
         return ["No Locks hold at the moment"]
     res = list()
     for locknode in hold_lock_nodes:
-        lockstr = str(locknode.value.ID)
-        lockstr += "-- ("+str(locknode.value.info)+")"
+        lockstr = locknode.value.nicestr()
         lockstr += " "+str(len(locknode.getCallLocations()))+" calls"
         lockstr += "\n" 
         for loc in locknode.getCallLocations():
-            lockstr += "  "+str(loc) + "\n"
+            lockstr += str(loc) + "\n"
         res.append(lockstr)
     return res
 
@@ -61,10 +64,10 @@ def printLockInfo(trees,query):
             if lock is None:
                 lock = occurrences[0].value
             threadcount += 1
-            threadstr = "Thread "+str(tree.value)+" called the lock from \n"
+            threadstr = "Thread "+nicestr(tree.value)+" called the lock from \n"
             for n in occurrences:
                 for loc in n.getCallLocations():
-                    threadstr += "  "+str(loc) + "\n"
+                    threadstr += str(loc) + "\n"
             call_locations.append(threadstr)
     if lock:
         res = lock.nicestr()+" \n"

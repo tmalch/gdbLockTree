@@ -8,8 +8,8 @@ name = "swebmutex"
 def getThreadID():
 	sym = gdb.lookup_global_symbol("currentThread")
 	if int(sym.value()) != 0:
-		threadobj = sym.value().dereference()
 		addr = int(sym.value())
+		threadobj = sym.value().dereference()
 		name = threadobj['name_'].string()
 		return (addr,name)
 	else:
@@ -24,13 +24,19 @@ class SwebMutextBP(PluginBase):
 		
 		tid,thread_name = getThreadID()
 		lock_ptr = GDBHelper.getVariableValue("this")
-		lid = lock_ptr.cast(gdb.lookup_type("int"))
-		lock_name = lock_ptr.dereference()['name_']
+		lid = int(lock_ptr)
+		lock_obj = lock_ptr.dereference()
+		try:
+			lock_name = lock_obj['name_'].string()
+		except:
+			lock_name = "name Unkown"
 		bt = GDBHelper.getBacktrace()
 		btstring = ""
-		for l in bt:
-			btstring +=l
-		self.function(tid,lid,thread_info=thread_name, lock_info=lock_name,call_location=btstring)
+		i=0
+		while i < min(3,len(bt)):
+			btstring += i*" "+bt[i]+"\n"
+			i += 1
+		self.function(tid,lid,thread_info=thread_name, lock_info=lock_name,call_location=btstring[:-1])
 
 
 SwebMutextBP("Mutex::acquire",Interface.acquire)

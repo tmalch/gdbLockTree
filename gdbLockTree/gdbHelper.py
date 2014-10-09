@@ -68,7 +68,9 @@ def getLocation(frame = None):
 		if frame == None:
 			frame = gdb.newest_frame()
 		try:
-			filename = str(frame.find_sal().symtab.filename)[-20:]
+			filename = str(frame.find_sal().symtab.filename)
+			if len(filename) > 23:
+				filename = "..."+filename[-20:]
 		except:
 			filename = ""
 		try:
@@ -87,8 +89,6 @@ def getBacktrace():
 		frame = frame.older()
 		if frame == None or not frame.is_valid():
 			break
-		callingName = ""
-		callingLoc = ""
 		callingName = getFunctionName(frame)
 		callingLoc = getLocation(frame)
 		res.append(callingName+" at "+callingLoc)
