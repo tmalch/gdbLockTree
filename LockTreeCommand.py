@@ -93,17 +93,23 @@ class LockTreeCommand(gdb.Command):
 				return completion
 			elif subcommand == "monitore":
 				completion = Utils.completeFromList(word, LockTreeCommand.registery.keys())
-				return completion				
+				return completion
+			else:
+				return []			
 	
 	def invoke (self, arg, from_tty):
-		try:
+		try: 
 			argv = gdb.string_to_argv(arg)
 			command = argv[0].lower()
-			self.subCommands[command](argv)
+			subCommand = self.subCommands[command]
 		except Exception as e:
-			print("ERROR "+str(e))
 			for command in self.subCommands.keys():
 				print(command)
+			return
+		try:
+			subCommand(argv)
+		except Exception as e:
+			print("ERROR "+str(e))
 
 	def printPlugins(self,argv):
 		if len(LockTreeCommand.registery) == 0:

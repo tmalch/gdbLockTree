@@ -68,6 +68,7 @@ def printLockInfo(trees,query):
             for n in occurrences:
                 for loc in n.getCallLocations():
                     threadstr += str(loc) + "\n"
+            threadstr += "---------------------------------------------\n"
             call_locations.append(threadstr)
     if lock:
         res = lock.nicestr()+" \n"
