@@ -33,7 +33,7 @@ class Thread:
         return int(self.ID)
     def nicestr(self):
         res = str(hex(self.ID))
-        if self.info is not None:
+        if self.info is not None and self.info is not "":
             res += " -- ("+str(self.info)+")"
         return res
     def __str__(self):
@@ -54,7 +54,7 @@ class Lock:
         return self.ID
     def nicestr(self):
         lockstr = str(hex(self.ID))
-        if self.info is not None:
+        if self.info is not None and self.info is not "":
             lockstr += " -- ("+str(self.info)+")"
         return lockstr
     def __str__(self):
